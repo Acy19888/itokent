@@ -1,19 +1,21 @@
 import { prisma } from "@/lib/db";
 import { getLocale, getTranslations } from "next-intl/server";
-import { addDays, startOfDay } from "@/lib/utils";
+import { addDays, parseDateKey, startOfDay } from "@/lib/utils";
 import { ReservationActions } from "./reservation-actions";
 
+// Next.js 14: searchParams is a plain object, not a Promise.
 export default async function RestaurantHome({
   searchParams,
 }: {
-  searchParams: Promise<{ d?: string }>;
+  searchParams: { d?: string };
 }) {
   const t = await getTranslations("RestaurantApp");
   const locale = await getLocale();
-  const sp = await searchParams;
+  const sp = searchParams ?? {};
 
   const today = startOfDay(new Date());
-  const selected = sp.d ? new Date(sp.d) : today;
+  const validDate = typeof sp.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.d);
+  const selected = validDate ? parseDateKey(sp.d as string) : today;
   const dayStart = startOfDay(selected);
   const dayEnd = addDays(dayStart, 1);
 

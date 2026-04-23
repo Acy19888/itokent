@@ -2,50 +2,54 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import { TennisBoard } from "./tennis-board";
-import { addDays, dateKey, startOfDay } from "@/lib/utils";
+import { addDays, dateKey, parseDateKey, startOfDay } from "@/lib/utils";
 
+// Next.js 14: searchParams is a plain object, not a Promise.
 export default async function TennisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ d?: string }>;
+  searchParams: { d?: string };
 }) {
   const session = await auth();
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
   const t = await getTranslations("Tennis");
-  const sp = await searchParams;
 
   const today = startOfDay(new Date());
-  const selected = sp.d ? new Date(sp.d) : today;
 
-  // Build 7-day date strip
+  // Accept only strict YYYY-MM-DD strings — anything else falls back to today.
+  const sp = searchParams ?? {};
+  const validDate = typeof sp.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.d);
+  const selected = validDate ? parseDateKey(sp.d as string) : today;
+
+  // Build 14-day date strip
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
-
-  const courts = await prisma.tennisCourt.findMany({
-    where: { active: true },
-    orderBy: { name: "asc" },
-  });
 
   const dayStart = startOfDay(selected);
   const dayEnd = addDays(dayStart, 1);
 
-  const bookings = await prisma.tennisBooking.findMany({
-    where: {
-      date: { gte: dayStart, lt: dayEnd },
-      status: "CONFIRMED",
-    },
-    include: { user: { select: { id: true, name: true, villaId: true } } },
-  });
-
-  const myUpcoming = await prisma.tennisBooking.findMany({
-    where: {
-      userId: session.user.id,
-      status: "CONFIRMED",
-      date: { gte: today },
-    },
-    include: { court: true },
-    orderBy: [{ date: "asc" }, { startHour: "asc" }],
-    take: 10,
-  });
+  const [courts, bookings, myUpcoming] = await Promise.all([
+    prisma.tennisCourt.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.tennisBooking.findMany({
+      where: {
+        date: { gte: dayStart, lt: dayEnd },
+        status: "CONFIRMED",
+      },
+      include: { user: { select: { id: true, name: true, villaId: true } } },
+    }),
+    prisma.tennisBooking.findMany({
+      where: {
+        userId: session.user.id,
+        status: "CONFIRMED",
+        date: { gte: today },
+      },
+      include: { court: true },
+      orderBy: [{ date: "asc" }, { startHour: "asc" }],
+      take: 10,
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
