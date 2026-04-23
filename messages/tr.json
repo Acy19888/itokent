@@ -56,9 +56,13 @@
     "yourBooking": "Siz",
     "book": "Rezerve Et",
     "cancel": "İptal Et",
-    "bookedSuccess": "Rezervasyonunuz onaylandı",
+    "bookedSuccess": "Rezervasyonunuz onaylandı — onay e-postası gönderildi",
     "cancelledSuccess": "Rezervasyon iptal edildi",
-    "myBookings": "Rezervasyonlarım"
+    "myBookings": "Rezervasyonlarım",
+    "confirmTitle": "Rezervasyonu Onayla",
+    "confirmBody": "Bu tenis rezervasyonunu oluşturmak istediğinizden emin misiniz? Onaylandığında size bir onay e-postası gönderilecektir.",
+    "confirmYes": "Evet, Rezerve Et",
+    "confirmNo": "Vazgeç"
   },
   "PartyHouse": {
     "title": "Parti Evi",

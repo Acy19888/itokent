@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { parseDateKey } from "@/lib/utils";
+import { sendEmail, tennisConfirmationEmail } from "@/lib/email";
 
 const OPEN_HOUR = 9;   // 9:00 AM first slot
 const CLOSE_HOUR = 20; // last slot starts at 19:00
@@ -32,18 +33,47 @@ export async function bookTennisSlot(input: z.infer<typeof bookSchema>) {
     }
 
     try {
-      await prisma.tennisBooking.create({
-        data: {
-          courtId: parsed.courtId,
-          userId: user.id,
-          date,
+      // Create booking + fetch user/court info in parallel (court lookup is
+      // needed for the confirmation email; cheap even if it fails).
+      const [booking, fullUser, court] = await Promise.all([
+        prisma.tennisBooking.create({
+          data: {
+            courtId: parsed.courtId,
+            userId: user.id,
+            date,
+            startHour: parsed.startHour,
+            status: "CONFIRMED",
+          },
+        }),
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { email: true, name: true, locale: true },
+        }),
+        prisma.tennisCourt.findUnique({
+          where: { id: parsed.courtId },
+          select: { name: true },
+        }),
+      ]);
+
+      // Fire-and-forget confirmation email. Do NOT block the booking on this:
+      // an email failure (misconfigured Resend, bad address, etc.) must not
+      // roll back a successful reservation.
+      if (fullUser?.email && court?.name) {
+        const { subject, html } = tennisConfirmationEmail({
+          locale: fullUser.locale === "en" ? "en" : "tr",
+          userName: fullUser.name,
+          courtName: court.name,
+          dateKey: parsed.dateKey,
           startHour: parsed.startHour,
-          status: "CONFIRMED",
-        },
-      });
+        });
+        void sendEmail({ to: fullUser.email, subject, html }).catch((err) => {
+          console.error("[tennis.book] email dispatch failed", err?.message);
+        });
+      }
+
       revalidatePath("/tennis");
       revalidatePath("/home");
-      return { ok: true as const };
+      return { ok: true as const, bookingId: booking.id };
     } catch (e: any) {
       if (e.code === "P2002") return { ok: false, error: "SLOT_TAKEN" as const };
       console.error("[tennis.book] prisma error", { code: e?.code, message: e?.message });
@@ -55,7 +85,7 @@ export async function bookTennisSlot(input: z.infer<typeof bookSchema>) {
   }
 }
 
-const cancelSchema = z.object({ id: z.string().cuid() });
+const cancelSchema = z.object({ id: z.string().min(1) });
 
 export async function cancelTennisBooking(input: z.infer<typeof cancelSchema>) {
   const user = await requireUser();

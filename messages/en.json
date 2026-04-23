@@ -56,9 +56,13 @@
     "yourBooking": "You",
     "book": "Book",
     "cancel": "Cancel",
-    "bookedSuccess": "Your booking is confirmed",
+    "bookedSuccess": "Booking confirmed — confirmation email sent",
     "cancelledSuccess": "Booking cancelled",
-    "myBookings": "My bookings"
+    "myBookings": "My bookings",
+    "confirmTitle": "Confirm Reservation",
+    "confirmBody": "Are you sure you want to book this tennis slot? A confirmation email will be sent to you.",
+    "confirmYes": "Yes, book it",
+    "confirmNo": "Cancel"
   },
   "PartyHouse": {
     "title": "Party House",

@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { bookTennisSlot, cancelTennisBooking } from "@/lib/actions/tennis";
 import { cn, parseDateKey } from "@/lib/utils";
-import { X, Check, ChevronRight } from "lucide-react";
+import { X, Check } from "lucide-react";
 
 interface Props {
   userId: string;
@@ -43,6 +43,13 @@ export function TennisBoard({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [flash, setFlash] = useState<string | null>(null);
+  // Pending confirmation — set when user taps an open slot. The booking
+  // is not submitted until the modal's "Yes" button is pressed.
+  const [confirm, setConfirm] = useState<{
+    courtId: string;
+    courtName: string;
+    hour: number;
+  } | null>(null);
 
   const goDay = (key: string) => {
     const url = new URL(window.location.href);
@@ -56,8 +63,9 @@ export function TennisBoard({
   const slotMap = new Map<string, typeof bookings[number]>();
   for (const b of bookings) slotMap.set(`${b.courtId}-${b.startHour}`, b);
 
-  const onBook = (courtId: string, hour: number) => {
+  const doBook = (courtId: string, hour: number) => {
     if (pending) return;
+    setConfirm(null);
     start(async () => {
       const res = await bookTennisSlot({
         courtId,
@@ -66,7 +74,7 @@ export function TennisBoard({
       });
       if (res.ok) {
         setFlash(t("bookedSuccess"));
-        setTimeout(() => setFlash(null), 2500);
+        setTimeout(() => setFlash(null), 3500);
         router.refresh();
       } else {
         setFlash(res.error === "SLOT_TAKEN" ? t("booked") : "—");
@@ -74,6 +82,11 @@ export function TennisBoard({
         router.refresh();
       }
     });
+  };
+
+  const requestBook = (courtId: string, courtName: string, hour: number) => {
+    if (pending) return;
+    setConfirm({ courtId, courtName, hour });
   };
 
   const onCancel = (id: string) => {
@@ -184,7 +197,7 @@ export function TennisBoard({
                 return (
                   <button
                     key={h}
-                    onClick={() => onBook(court.id, h)}
+                    onClick={() => requestBook(court.id, court.name, h)}
                     disabled={pending}
                     className="slot-available rounded-lg px-2 py-3 text-center text-xs"
                   >
@@ -200,8 +213,83 @@ export function TennisBoard({
 
       {/* Flash */}
       {flash && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-forest-900 text-cream-50 px-5 py-3 rounded-full shadow-luxury flex items-center gap-2 text-sm">
-          <Check className="w-4 h-4 text-gold-400" /> {flash}
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-forest-900 text-cream-50 px-5 py-3 rounded-full shadow-luxury flex items-center gap-2 text-sm max-w-[90vw]">
+          <Check className="w-4 h-4 text-gold-400 shrink-0" />
+          <span>{flash}</span>
+        </div>
+      )}
+
+      {/* Confirmation modal */}
+      {confirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-up"
+          onClick={() => !pending && setConfirm(null)}
+        >
+          <div
+            className="w-full sm:max-w-md bg-ivory-50 rounded-t-3xl sm:rounded-3xl shadow-edel-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-itokent px-6 py-5 text-center">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-brass-400 mb-1">
+                {t("title")}
+              </div>
+              <h3 className="text-ivory-50 font-display text-2xl">
+                {t("confirmTitle")}
+              </h3>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6">
+              <div className="space-y-3 mb-5">
+                <div className="flex justify-between items-baseline border-b border-itokent-100 pb-2">
+                  <span className="text-[11px] uppercase tracking-wider text-forest-500">
+                    {t("court")}
+                  </span>
+                  <span className="font-semibold text-forest-900">
+                    {confirm.courtName}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline border-b border-itokent-100 pb-2">
+                  <span className="text-[11px] uppercase tracking-wider text-forest-500">
+                    {t("selectDate")}
+                  </span>
+                  <span className="font-semibold text-forest-900 text-right">
+                    {fmtDayLong.format(selectedDate)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline pb-1">
+                  <span className="text-[11px] uppercase tracking-wider text-forest-500">
+                    {t("slot")}
+                  </span>
+                  <span className="font-semibold text-forest-900">
+                    {String(confirm.hour).padStart(2, "0")}:00 – {String(confirm.hour + 1).padStart(2, "0")}:00
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-forest-700 leading-relaxed mb-6">
+                {t("confirmBody")}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setConfirm(null)}
+                  disabled={pending}
+                  className="btn-outline py-3 text-sm"
+                >
+                  {t("confirmNo")}
+                </button>
+                <button
+                  onClick={() => doBook(confirm.courtId, confirm.hour)}
+                  disabled={pending}
+                  className="btn-primary py-3 text-sm"
+                >
+                  {pending ? "…" : t("confirmYes")}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
