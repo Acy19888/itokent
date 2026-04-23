@@ -35,6 +35,7 @@ export default async function RestaurantHome({
   const fmtDayShort = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric" });
 
   const totalGuests = reservations.reduce((sum, r) => sum + r.partySize, 0);
+  const tablesInUse = new Set(reservations.map((r) => r.tableNumber)).size;
 
   return (
     <div className="space-y-6">
@@ -68,9 +69,10 @@ export default async function RestaurantHome({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <StatCard label={locale === "tr" ? "Rezervasyon" : "Reservations"} value={reservations.length} />
-        <StatCard label={locale === "tr" ? "Toplam Kişi" : "Total guests"} value={totalGuests} />
+        <StatCard label={locale === "tr" ? "Masa" : "Tables"} value={`${tablesInUse}/10`} />
+        <StatCard label={locale === "tr" ? "Kişi" : "Guests"} value={`${totalGuests}/40`} />
         <StatCard label={locale === "tr" ? "Gelen" : "Arrived"} value={reservations.filter((r) => r.checkedIn).length} />
       </div>
 
@@ -95,6 +97,9 @@ export default async function RestaurantHome({
                 <div className="shrink-0 w-16 text-center">
                   <div className="font-display text-2xl text-gold-400">
                     {fmtTime.format(r.date)}
+                  </div>
+                  <div className="mt-1 inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gold-400/10 border border-gold-500/30 font-display text-sm text-gold-300">
+                    T{r.tableNumber}
                   </div>
                 </div>
                 <div className="flex-1">
@@ -136,11 +141,19 @@ export default async function RestaurantHome({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | string;
+}) {
   return (
-    <div className="rounded-xl bg-forest-900/60 border border-gold-500/20 p-4">
-      <div className="text-[10px] uppercase tracking-wider text-cream-400">{label}</div>
-      <div className="font-display text-3xl text-gold-400 mt-1">{value}</div>
+    <div className="rounded-xl bg-forest-900/60 border border-gold-500/20 p-3">
+      <div className="text-[10px] uppercase tracking-wider text-cream-400">
+        {label}
+      </div>
+      <div className="font-display text-2xl text-gold-400 mt-1">{value}</div>
     </div>
   );
 }

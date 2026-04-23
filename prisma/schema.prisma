@@ -94,16 +94,21 @@ model PartyHouseBooking {
 // ─── Restaurant ───────────────────────────────────────────────────────
 
 model RestaurantReservation {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  date       DateTime                  // full datetime of reservation
-  partySize  Int
-  notes      String?
-  checkedIn  Boolean  @default(false)
-  status     String   @default("CONFIRMED")  // CONFIRMED, CANCELLED, NO_SHOW
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime                  // full datetime of reservation
+  tableNumber Int      @default(1)      // 1..10 — the physical table
+  partySize   Int                       // 1..4 (4 seats per table)
+  notes       String?
+  checkedIn   Boolean  @default(false)
+  status      String   @default("CONFIRMED")  // CONFIRMED, CANCELLED, NO_SHOW
+  createdAt   DateTime @default(now())
 
+  // One table can only be reserved by one party per exact time slot.
+  // Cancelled reservations still occupy the unique key (we don't re-use
+  // a cancelled row); the action flips `status` instead of deleting.
+  @@unique([date, tableNumber], name: "table_slot")
   @@index([date])
   @@index([userId])
 }

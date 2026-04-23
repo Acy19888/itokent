@@ -222,11 +222,11 @@ export function TennisBoard({
       {/* Confirmation modal */}
       {confirm && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-up"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-up"
           onClick={() => !pending && setConfirm(null)}
         >
           <div
-            className="w-full sm:max-w-md bg-ivory-50 rounded-t-3xl sm:rounded-3xl shadow-edel-lg overflow-hidden"
+            className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-ivory-50 rounded-3xl shadow-edel-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
