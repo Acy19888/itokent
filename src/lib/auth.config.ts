@@ -21,15 +21,10 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-    villaId: string | null;
-    villaNumber: number | null;
-    locale: string;
-  }
-}
+// NOTE: JWT type augmentation is intentionally omitted. NextAuth v5 beta does
+// not expose "next-auth/jwt" as a stable sub-path in its package.json exports,
+// which breaks `declare module "next-auth/jwt"` during `next build` on Vercel.
+// Instead, we cast token fields inline in the callbacks below.
 
 export const authConfig = {
   session: { strategy: "jwt" },
@@ -38,21 +33,23 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as any).id;
-        token.role = (user as any).role;
-        token.villaId = (user as any).villaId;
-        token.villaNumber = (user as any).villaNumber;
-        token.locale = (user as any).locale;
+        const u = user as any;
+        (token as any).id = u.id;
+        (token as any).role = u.role;
+        (token as any).villaId = u.villaId;
+        (token as any).villaNumber = u.villaNumber;
+        (token as any).locale = u.locale;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.villaId = token.villaId;
-        session.user.villaNumber = token.villaNumber;
-        session.user.locale = token.locale;
+        const t = token as any;
+        session.user.id = t.id;
+        session.user.role = t.role;
+        session.user.villaId = t.villaId;
+        session.user.villaNumber = t.villaNumber;
+        session.user.locale = t.locale;
       }
       return session;
     },
