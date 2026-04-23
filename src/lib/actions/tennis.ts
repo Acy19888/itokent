@@ -71,4 +71,5 @@ export async function cancelTennisBooking(input: z.infer<typeof cancelSchema>) {
   return { ok: true as const };
 }
 
-export const TENNIS_CONFIG = { OPEN_HOUR, CLOSE_HOUR };
+// NOTE: Do not add non-async exports here. Files with "use server" are compiled
+// into server-action bundles and may only export async functions.
