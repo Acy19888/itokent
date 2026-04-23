@@ -162,7 +162,20 @@
     "phone": "Telefon",
     "villa": "Villa No",
     "language": "Dil",
-    "save": "Kaydet"
+    "save": "Kaydet",
+    "edit": "Düzenle",
+    "cancel": "Vazgeç",
+    "saved": "Değişiklikler kaydedildi",
+    "emailTaken": "Bu e-posta zaten kullanılıyor",
+    "saveError": "Kayıt başarısız — lütfen tekrar deneyin",
+    "personalInfo": "Kişisel Bilgiler",
+    "password": "Şifre",
+    "changePassword": "Şifre Değiştir",
+    "currentPassword": "Mevcut Şifre",
+    "newPassword": "Yeni Şifre",
+    "passwordMinHint": "En az 8 karakter",
+    "passwordChanged": "Şifreniz güncellendi",
+    "wrongPassword": "Mevcut şifre hatalı"
   },
   "Admin": {
     "dashboard": "Yönetim Paneli",
@@ -187,7 +200,17 @@
     "approve": "Onayla",
     "reject": "Reddet",
     "markResolved": "Çözüldü",
-    "markInProgress": "İşlemde"
+    "markInProgress": "İşlemde",
+    "editResident": "Sakini Düzenle",
+    "edit": "Düzenle",
+    "cancel": "Vazgeç",
+    "save": "Kaydet",
+    "residentUpdated": "Sakin güncellendi",
+    "resetPassword": "Şifre Sıfırla",
+    "resetPasswordTitle": "Şifre Sıfırla",
+    "resetPasswordBody": "Bu sakin için yeni bir şifre belirleyin.",
+    "newPassword": "Yeni Şifre",
+    "passwordResetDone": "Şifre sıfırlandı"
   },
   "RestaurantApp": {
     "title": "Restoran Yönetimi",

@@ -162,7 +162,20 @@
     "phone": "Phone",
     "villa": "Villa no.",
     "language": "Language",
-    "save": "Save"
+    "save": "Save",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "saved": "Changes saved",
+    "emailTaken": "This email is already in use",
+    "saveError": "Save failed — please try again",
+    "personalInfo": "Personal information",
+    "password": "Password",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordMinHint": "At least 8 characters",
+    "passwordChanged": "Password updated",
+    "wrongPassword": "Current password is incorrect"
   },
   "Admin": {
     "dashboard": "Admin dashboard",
@@ -187,7 +200,17 @@
     "approve": "Approve",
     "reject": "Reject",
     "markResolved": "Mark resolved",
-    "markInProgress": "In progress"
+    "markInProgress": "In progress",
+    "editResident": "Edit resident",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "residentUpdated": "Resident updated",
+    "resetPassword": "Reset password",
+    "resetPasswordTitle": "Reset password",
+    "resetPasswordBody": "Set a new password for this resident.",
+    "newPassword": "New password",
+    "passwordResetDone": "Password reset"
   },
   "RestaurantApp": {
     "title": "Restaurant management",

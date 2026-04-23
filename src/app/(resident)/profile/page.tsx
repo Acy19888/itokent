@@ -3,6 +3,9 @@ import { getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { ProfileForm } from "./profile-form";
+import { PasswordForm } from "./password-form";
 
 async function logout() {
   "use server";
@@ -12,8 +15,20 @@ async function logout() {
 
 export default async function ProfilePage() {
   const session = await auth();
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
   const t = await getTranslations("Profile");
+
+  // Read the user fresh from the DB so edits aren't bottlenecked by JWT refresh.
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      name: true,
+      email: true,
+      phone: true,
+      villa: { select: { number: true } },
+    },
+  });
+  if (!user) return null;
 
   return (
     <div className="space-y-6">
@@ -21,32 +36,49 @@ export default async function ProfilePage() {
         <h1 className="font-display text-3xl text-forest-900">{t("title")}</h1>
       </header>
 
-      <div className="card-luxury p-6 space-y-4">
-        <Field label={t("name")} value={session.user.name} />
-        <Field label={t("email")} value={session.user.email} />
-        {session.user.villaNumber && (
-          <Field label={t("villa")} value={String(session.user.villaNumber).padStart(3, "0")} />
-        )}
-        <div className="pt-2">
-          <label className="label-luxury">{t("language")}</label>
-          <LocaleSwitcher />
+      {/* Personal info card */}
+      <section className="card-luxury p-6">
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="font-display text-lg text-forest-900">
+            {t("personalInfo")}
+          </h2>
+          {user.villa && (
+            <span className="text-xs font-mono text-forest-500">
+              {t("villa")} · {String(user.villa.number).padStart(3, "0")}
+            </span>
+          )}
         </div>
-      </div>
+        <ProfileForm
+          initial={{
+            name: user.name,
+            email: user.email,
+            phone: user.phone ?? "",
+          }}
+        />
+      </section>
+
+      {/* Language card */}
+      <section className="card-luxury p-6">
+        <label className="label-luxury mb-2 block">{t("language")}</label>
+        <LocaleSwitcher />
+      </section>
+
+      {/* Password card */}
+      <section className="card-luxury p-6">
+        <h2 className="font-display text-lg text-forest-900 mb-4">
+          {t("changePassword")}
+        </h2>
+        <PasswordForm />
+      </section>
 
       <form action={logout}>
-        <button type="submit" className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-red-200 text-red-700 bg-white hover:bg-red-50 transition">
+        <button
+          type="submit"
+          className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-red-200 text-red-700 bg-white hover:bg-red-50 transition"
+        >
           <LogOut className="w-4 h-4" /> Logout
         </button>
       </form>
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-xs uppercase tracking-wider text-forest-400">{label}</div>
-      <div className="text-base text-forest-900 font-medium">{value}</div>
     </div>
   );
 }
