@@ -87,8 +87,18 @@ export function TennisBoard({
         setTimeout(() => setFlash(null), 3500);
         router.refresh();
       } else {
-        setFlash(res.error === "SLOT_TAKEN" ? t("booked") : "—");
-        setTimeout(() => setFlash(null), 2500);
+        // Surface the actual error code instead of a meaningless em-dash,
+        // so we (and the user) can tell *why* a booking failed.
+        const msg =
+          res.error === "SLOT_TAKEN"
+            ? t("booked")
+            : res.error === "PAST_SLOT"
+              ? (locale === "tr" ? "Bu saat geçmiş." : "That time has passed.")
+              : (locale === "tr"
+                  ? `Rezervasyon yapılamadı (${res.error ?? "ERROR"})`
+                  : `Could not book (${res.error ?? "ERROR"})`);
+        setFlash(msg);
+        setTimeout(() => setFlash(null), 4500);
         router.refresh();
       }
     });
@@ -221,12 +231,14 @@ export function TennisBoard({
         ))}
       </div>
 
-      {/* Flash */}
-      {flash && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-forest-900 text-cream-50 px-5 py-3 rounded-full shadow-luxury flex items-center gap-2 text-sm max-w-[90vw]">
+      {/* Flash — portaled to body so `fixed` anchors to the viewport, not to
+          <main> (which has a transform from animate-fade-up, breaking `fixed`). */}
+      {flash && mounted && createPortal(
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-forest-900 text-cream-50 px-5 py-3 rounded-full shadow-luxury flex items-center gap-2 text-sm max-w-[90vw]">
           <Check className="w-4 h-4 text-gold-400 shrink-0" />
           <span>{flash}</span>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* Confirmation modal — portaled to body so it escapes <main>'s
