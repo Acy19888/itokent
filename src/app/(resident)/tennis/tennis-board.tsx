@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { bookTennisSlot, cancelTennisBooking } from "@/lib/actions/tennis";
@@ -50,6 +51,15 @@ export function TennisBoard({
     courtName: string;
     hour: number;
   } | null>(null);
+
+  // Portal target. We only render the confirm modal after mount so SSR
+  // doesn't choke on `document`. Rendering the modal via createPortal to
+  // document.body is essential: `<main>` has `animate-fade-up` which leaves
+  // a `transform: translateY(0)` on it (fill-mode: both), creating a new
+  // stacking context. A z-50 modal inside `<main>` would still lose against
+  // the z-30 bottom nav at the root level. Portaling escapes that.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const goDay = (key: string) => {
     const url = new URL(window.location.href);
@@ -219,10 +229,11 @@ export function TennisBoard({
         </div>
       )}
 
-      {/* Confirmation modal */}
-      {confirm && (
+      {/* Confirmation modal — portaled to body so it escapes <main>'s
+          stacking context (otherwise the bottom nav would cover it). */}
+      {confirm && mounted && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-up"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={() => !pending && setConfirm(null)}
         >
           <div
@@ -290,7 +301,8 @@ export function TennisBoard({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* My upcoming */}
