@@ -1,0 +1,212 @@
+{
+  "Brand": {
+    "name": "İtokent",
+    "suffix": "Urla",
+    "tagline": "Private Living Community",
+    "subline": "İzmir's largest gated community — resident portal"
+  },
+  "Nav": {
+    "home": "Home",
+    "tennis": "Tennis",
+    "partyHouse": "Party House",
+    "restaurant": "Restaurant",
+    "events": "Events",
+    "guests": "Guests",
+    "announcements": "News",
+    "maintenance": "Maintenance",
+    "profile": "Profile",
+    "logout": "Sign out",
+    "admin": "Admin",
+    "reservations": "Reservations",
+    "residents": "Residents",
+    "dashboard": "Dashboard"
+  },
+  "Auth": {
+    "signIn": "Sign In",
+    "signInTitle": "Welcome",
+    "signInSubtitle": "Sign in to your community",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "invalidCredentials": "Invalid email or password",
+    "demoHint": "Demo accounts: admin@villa.com, cem@villa.com, restaurant@villa.com (password: demo1234)"
+  },
+  "Home": {
+    "greeting": "Hello",
+    "villa": "Villa",
+    "quickActions": "Quick Actions",
+    "bookTennis": "Book Tennis",
+    "bookRestaurant": "Book a Table",
+    "bookParty": "Book Party House",
+    "viewEvents": "Events",
+    "addGuest": "Add Guest",
+    "reportIssue": "Report Issue",
+    "upcoming": "Upcoming",
+    "noUpcoming": "No upcoming bookings.",
+    "latestNews": "Latest News"
+  },
+  "Tennis": {
+    "title": "Tennis Booking",
+    "subtitle": "Courts are open from 9:00 AM to 8:00 PM. Each slot is 1 hour.",
+    "selectDate": "Select date",
+    "court": "Court",
+    "slot": "Time",
+    "available": "Available",
+    "booked": "Booked",
+    "yourBooking": "You",
+    "book": "Book",
+    "cancel": "Cancel",
+    "bookedSuccess": "Your booking is confirmed",
+    "cancelledSuccess": "Booking cancelled",
+    "myBookings": "My bookings"
+  },
+  "PartyHouse": {
+    "title": "Party House",
+    "subtitle": "The party house can be rented for private events. Max one event per day.",
+    "selectDate": "Select date",
+    "occasion": "Occasion / topic",
+    "guestCount": "Number of guests",
+    "notes": "Notes",
+    "submit": "Submit request",
+    "dateTaken": "This date is already taken by someone else.",
+    "pending": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "myRequests": "My requests",
+    "requestSubmitted": "Your request has been submitted for review."
+  },
+  "Restaurant": {
+    "title": "Restaurant Reservation",
+    "subtitle": "Dinner reservations 6:00 PM – 10:30 PM.",
+    "date": "Date",
+    "time": "Time",
+    "partySize": "Party size",
+    "notes": "Special request",
+    "book": "Reserve",
+    "success": "Your reservation is confirmed",
+    "myReservations": "My reservations",
+    "cancel": "Cancel",
+    "cancelled": "Cancelled"
+  },
+  "Events": {
+    "title": "Events",
+    "subtitle": "Upcoming community events",
+    "noEvents": "No events scheduled.",
+    "location": "Location",
+    "when": "When"
+  },
+  "Guests": {
+    "title": "Guest Registration",
+    "subtitle": "Register your guests so security can let them in.",
+    "add": "Add guest",
+    "name": "Full name",
+    "plate": "License plate (optional)",
+    "arrivesAt": "Arrival time",
+    "purpose": "Purpose",
+    "submit": "Save",
+    "myGuests": "My registered guests",
+    "empty": "You haven't added any guests yet.",
+    "arrived": "Arrived",
+    "pending": "Pending"
+  },
+  "Announcements": {
+    "title": "Announcements",
+    "subtitle": "News from the community",
+    "empty": "No announcements yet.",
+    "priority": {
+      "NORMAL": "Normal",
+      "HIGH": "Important",
+      "URGENT": "Urgent"
+    }
+  },
+  "Maintenance": {
+    "title": "Maintenance Requests",
+    "subtitle": "Issue with your villa or common area?",
+    "newTicket": "New request",
+    "category": "Category",
+    "categories": {
+      "ELECTRIC": "Electric",
+      "PLUMBING": "Plumbing",
+      "GARDEN": "Garden",
+      "POOL": "Pool",
+      "OTHER": "Other"
+    },
+    "title_field": "Title",
+    "description": "Description",
+    "priority": "Priority",
+    "priorities": {
+      "LOW": "Low",
+      "NORMAL": "Normal",
+      "HIGH": "High"
+    },
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In progress",
+      "RESOLVED": "Resolved",
+      "CLOSED": "Closed"
+    },
+    "submit": "Submit request",
+    "myTickets": "My tickets",
+    "empty": "No open tickets.",
+    "submitted": "Your request has been saved; we'll get to it shortly."
+  },
+  "Profile": {
+    "title": "My profile",
+    "name": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "villa": "Villa no.",
+    "language": "Language",
+    "save": "Save"
+  },
+  "Admin": {
+    "dashboard": "Admin dashboard",
+    "welcome": "Welcome",
+    "stats": {
+      "residents": "Residents",
+      "todayBookings": "Today's bookings",
+      "openTickets": "Open tickets",
+      "upcomingEvents": "Upcoming events"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "bookings": "Bookings",
+      "events": "Events",
+      "announcements": "Announcements",
+      "maintenance": "Maintenance",
+      "guests": "Guests",
+      "residents": "Residents"
+    },
+    "createEvent": "New event",
+    "createAnnouncement": "New announcement",
+    "approve": "Approve",
+    "reject": "Reject",
+    "markResolved": "Mark resolved",
+    "markInProgress": "In progress"
+  },
+  "RestaurantApp": {
+    "title": "Restaurant management",
+    "todayReservations": "Today's reservations",
+    "partySize": "Guests",
+    "notes": "Note",
+    "checkIn": "Check in",
+    "checkedIn": "Checked in ✓",
+    "noShow": "No show",
+    "empty": "No reservations today."
+  },
+  "Common": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "search": "Search",
+    "status": "Status",
+    "actions": "Actions",
+    "date": "Date",
+    "time": "Time"
+  }
+}

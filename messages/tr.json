@@ -1,0 +1,212 @@
+{
+  "Brand": {
+    "name": "İtokent",
+    "suffix": "Urla",
+    "tagline": "Özel Yaşam Topluluğu",
+    "subline": "İzmir'in en büyük sitesi — sakinler için özel portal"
+  },
+  "Nav": {
+    "home": "Ana Sayfa",
+    "tennis": "Tenis",
+    "partyHouse": "Parti Evi",
+    "restaurant": "Restoran",
+    "events": "Etkinlikler",
+    "guests": "Misafirler",
+    "announcements": "Duyurular",
+    "maintenance": "Bakım",
+    "profile": "Profil",
+    "logout": "Çıkış Yap",
+    "admin": "Yönetim",
+    "reservations": "Rezervasyonlar",
+    "residents": "Sakinler",
+    "dashboard": "Panel"
+  },
+  "Auth": {
+    "signIn": "Giriş Yap",
+    "signInTitle": "Hoş Geldiniz",
+    "signInSubtitle": "Topluluğunuza giriş yapın",
+    "email": "E-posta",
+    "password": "Şifre",
+    "submit": "Giriş",
+    "invalidCredentials": "Geçersiz e-posta veya şifre",
+    "demoHint": "Demo hesaplar: admin@villa.com, cem@villa.com, restaurant@villa.com (şifre: demo1234)"
+  },
+  "Home": {
+    "greeting": "Merhaba",
+    "villa": "Villa",
+    "quickActions": "Hızlı İşlemler",
+    "bookTennis": "Tenis Rezervasyonu",
+    "bookRestaurant": "Masa Ayırt",
+    "bookParty": "Parti Evi Kirala",
+    "viewEvents": "Etkinlikler",
+    "addGuest": "Misafir Ekle",
+    "reportIssue": "Bakım Talebi",
+    "upcoming": "Yaklaşan",
+    "noUpcoming": "Yaklaşan rezervasyon yok.",
+    "latestNews": "Son Duyurular"
+  },
+  "Tennis": {
+    "title": "Tenis Rezervasyonu",
+    "subtitle": "Kortlarımız sabah 9:00'dan akşam 20:00'a kadar açıktır. Her slot 1 saattir.",
+    "selectDate": "Tarih Seç",
+    "court": "Kort",
+    "slot": "Saat",
+    "available": "Uygun",
+    "booked": "Dolu",
+    "yourBooking": "Siz",
+    "book": "Rezerve Et",
+    "cancel": "İptal Et",
+    "bookedSuccess": "Rezervasyonunuz onaylandı",
+    "cancelledSuccess": "Rezervasyon iptal edildi",
+    "myBookings": "Rezervasyonlarım"
+  },
+  "PartyHouse": {
+    "title": "Parti Evi",
+    "subtitle": "Parti eviniz özel etkinlikler için kiralanabilir. Günde en fazla bir etkinlik.",
+    "selectDate": "Tarih Seç",
+    "occasion": "Özel Gün / Konu",
+    "guestCount": "Misafir Sayısı",
+    "notes": "Notlar",
+    "submit": "Rezervasyon Talebi Gönder",
+    "dateTaken": "Bu tarih başka biri tarafından alınmış.",
+    "pending": "Onay Bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "cancelled": "İptal",
+    "myRequests": "Taleplerim",
+    "requestSubmitted": "Talebiniz gönderildi, yönetim inceleyecektir."
+  },
+  "Restaurant": {
+    "title": "Restoran Rezervasyonu",
+    "subtitle": "Akşam yemeği rezervasyonları 18:00–22:30 arasında alınır.",
+    "date": "Tarih",
+    "time": "Saat",
+    "partySize": "Kişi Sayısı",
+    "notes": "Özel istek",
+    "book": "Rezervasyon Yap",
+    "success": "Masa rezervasyonunuz onaylandı",
+    "myReservations": "Rezervasyonlarım",
+    "cancel": "İptal",
+    "cancelled": "İptal edildi"
+  },
+  "Events": {
+    "title": "Etkinlikler",
+    "subtitle": "Topluluğumuzun yaklaşan etkinlikleri",
+    "noEvents": "Şu an planlanmış bir etkinlik yok.",
+    "location": "Yer",
+    "when": "Zaman"
+  },
+  "Guests": {
+    "title": "Misafir Girişi",
+    "subtitle": "Misafirleriniz için güvenlikte bilgi bırakın.",
+    "add": "Yeni Misafir",
+    "name": "Ad Soyad",
+    "plate": "Plaka (opsiyonel)",
+    "arrivesAt": "Varış Zamanı",
+    "purpose": "Ziyaret sebebi",
+    "submit": "Kaydet",
+    "myGuests": "Kayıtlı misafirlerim",
+    "empty": "Henüz misafir eklemediniz.",
+    "arrived": "Geldi",
+    "pending": "Bekleniyor"
+  },
+  "Announcements": {
+    "title": "Duyurular",
+    "subtitle": "Topluluktan haberler",
+    "empty": "Henüz duyuru yok.",
+    "priority": {
+      "NORMAL": "Normal",
+      "HIGH": "Önemli",
+      "URGENT": "Acil"
+    }
+  },
+  "Maintenance": {
+    "title": "Bakım Talepleri",
+    "subtitle": "Villa veya topluluk alanlarıyla ilgili bir sorun mu var?",
+    "newTicket": "Yeni Talep",
+    "category": "Kategori",
+    "categories": {
+      "ELECTRIC": "Elektrik",
+      "PLUMBING": "Sıhhi Tesisat",
+      "GARDEN": "Bahçe",
+      "POOL": "Havuz",
+      "OTHER": "Diğer"
+    },
+    "title_field": "Başlık",
+    "description": "Açıklama",
+    "priority": "Öncelik",
+    "priorities": {
+      "LOW": "Düşük",
+      "NORMAL": "Normal",
+      "HIGH": "Yüksek"
+    },
+    "status": {
+      "OPEN": "Açık",
+      "IN_PROGRESS": "İşlemde",
+      "RESOLVED": "Çözüldü",
+      "CLOSED": "Kapalı"
+    },
+    "submit": "Talep Gönder",
+    "myTickets": "Taleplerim",
+    "empty": "Açık talebiniz yok.",
+    "submitted": "Talebiniz kaydedildi, en kısa sürede ilgileneceğiz."
+  },
+  "Profile": {
+    "title": "Profilim",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "villa": "Villa No",
+    "language": "Dil",
+    "save": "Kaydet"
+  },
+  "Admin": {
+    "dashboard": "Yönetim Paneli",
+    "welcome": "Hoş geldiniz",
+    "stats": {
+      "residents": "Sakinler",
+      "todayBookings": "Bugünkü Rezervasyonlar",
+      "openTickets": "Açık Talepler",
+      "upcomingEvents": "Yaklaşan Etkinlikler"
+    },
+    "tabs": {
+      "overview": "Özet",
+      "bookings": "Rezervasyonlar",
+      "events": "Etkinlikler",
+      "announcements": "Duyurular",
+      "maintenance": "Bakım",
+      "guests": "Misafirler",
+      "residents": "Sakinler"
+    },
+    "createEvent": "Yeni Etkinlik",
+    "createAnnouncement": "Yeni Duyuru",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "markResolved": "Çözüldü",
+    "markInProgress": "İşlemde"
+  },
+  "RestaurantApp": {
+    "title": "Restoran Yönetimi",
+    "todayReservations": "Bugünkü Rezervasyonlar",
+    "partySize": "Kişi",
+    "notes": "Not",
+    "checkIn": "Geldi",
+    "checkedIn": "Geldi ✓",
+    "noShow": "Gelmedi",
+    "empty": "Bugün için rezervasyon yok."
+  },
+  "Common": {
+    "today": "Bugün",
+    "tomorrow": "Yarın",
+    "loading": "Yükleniyor...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "back": "Geri",
+    "search": "Ara",
+    "status": "Durum",
+    "actions": "İşlemler",
+    "date": "Tarih",
+    "time": "Saat"
+  }
+}
