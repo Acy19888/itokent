@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { parseDateKey } from "@/lib/utils";
-import { sendEmail, tennisConfirmationEmail } from "@/lib/email";
+import {
+  sendEmail,
+  tennisCancellationEmail,
+  tennisConfirmationEmail,
+} from "@/lib/email";
 
 const OPEN_HOUR = 9;   // 9:00 AM first slot
 const CLOSE_HOUR = 20; // last slot starts at 19:00
@@ -90,12 +94,48 @@ const cancelSchema = z.object({ id: z.string().min(1) });
 export async function cancelTennisBooking(input: z.infer<typeof cancelSchema>) {
   const user = await requireUser();
   const parsed = cancelSchema.parse(input);
+  // Fetch with court + user details in one roundtrip — we need them for
+  // the cancellation email, and the booking must exist / belong to us
+  // before we delete anything.
   const booking = await prisma.tennisBooking.findUnique({
     where: { id: parsed.id },
+    include: {
+      court: { select: { name: true } },
+      user: { select: { email: true, name: true, locale: true } },
+    },
   });
-  if (!booking || booking.userId !== user.id) return { ok: false as const, error: "NOT_FOUND" as const };
+  if (!booking || booking.userId !== user.id) {
+    return { ok: false as const, error: "NOT_FOUND" as const };
+  }
+
+  // Capture details BEFORE deletion so we can email even if something
+  // else races (another process deletes the row, etc.).
+  const courtName = booking.court?.name ?? "";
+  const userEmail = booking.user?.email ?? null;
+  const userName = booking.user?.name ?? "";
+  const userLocale = booking.user?.locale === "en" ? "en" : "tr";
+  const dateKey = booking.date.toISOString().slice(0, 10);
+  const startHour = booking.startHour;
+
   // Hard-delete so the slot frees up immediately.
   await prisma.tennisBooking.delete({ where: { id: parsed.id } });
+
+  // Fire-and-forget cancellation email (must not block cancellation
+  // success — an email outage can't leave the user with a phantom
+  // reservation).
+  if (userEmail && courtName) {
+    const { subject, html } = tennisCancellationEmail({
+      locale: userLocale,
+      userName,
+      courtName,
+      dateKey,
+      startHour,
+    });
+    void sendEmail({ to: userEmail, subject, html }).catch((err) => {
+      console.error("[tennis.cancel] email dispatch failed", err?.message);
+    });
+  }
+
   revalidatePath("/tennis");
   revalidatePath("/home");
   return { ok: true as const };

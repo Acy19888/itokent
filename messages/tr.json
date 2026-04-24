@@ -86,7 +86,7 @@
   },
   "Restaurant": {
     "title": "Restoran Rezervasyonu",
-    "subtitle": "Akşam yemeği rezervasyonları 18:00–22:30 arasında alınır. 10 masa · her masada 4 koltuk · en fazla 40 kişi.",
+    "subtitle": "Akşam yemeği rezervasyonları 18:00 – 22:30 arasında alınır. Lütfen tarih, saat ve kişi sayısını seçin.",
     "date": "Tarih",
     "time": "Saat",
     "table": "Masa",

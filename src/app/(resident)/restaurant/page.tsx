@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addDays, startOfDay } from "@/lib/utils";
 import { RestaurantForm } from "./restaurant-form";
+import { TOTAL_TABLES } from "@/lib/restaurant-config";
 
 export default async function RestaurantPage() {
   const session = await auth();
@@ -14,7 +15,7 @@ export default async function RestaurantPage() {
   const windowEnd = addDays(today, 14); // 2-week booking window
 
   // Fetch everything in parallel: this user's own history + all confirmed
-  // reservations in the next 2 weeks (for table-availability rendering).
+  // reservations in the next 2 weeks (for slot-availability rendering).
   const [mine, confirmed] = await Promise.all([
     prisma.restaurantReservation.findMany({
       where: { userId: session.user.id },
@@ -26,15 +27,20 @@ export default async function RestaurantPage() {
         date: { gte: today, lt: windowEnd },
         status: { not: "CANCELLED" },
       },
-      select: { date: true, tableNumber: true },
+      select: { date: true },
     }),
   ]);
 
-  // Flatten to a list the client form can turn into a lookup map.
-  const bookedSlots = confirmed.map((r) => ({
-    iso: r.date.toISOString(),
-    tableNumber: r.tableNumber,
-  }));
+  // Aggregate to "how many tables booked at each exact datetime". The
+  // customer form only needs a boolean (full / not full) — we do NOT
+  // leak per-table detail. Capacity math stays server-side and in
+  // /restaurant-app (staff view) only.
+  const countsMap = new Map<string, number>();
+  for (const r of confirmed) {
+    const iso = r.date.toISOString();
+    countsMap.set(iso, (countsMap.get(iso) ?? 0) + 1);
+  }
+  const slotCounts = Array.from(countsMap, ([iso, count]) => ({ iso, count }));
 
   const fmt = new Intl.DateTimeFormat(locale, {
     weekday: "short",
@@ -52,7 +58,7 @@ export default async function RestaurantPage() {
       </header>
 
       <div className="card-luxury p-5">
-        <RestaurantForm bookedSlots={bookedSlots} />
+        <RestaurantForm slotCounts={slotCounts} totalTables={TOTAL_TABLES} />
       </div>
 
       {mine.length > 0 && (
@@ -71,8 +77,7 @@ export default async function RestaurantPage() {
                     {fmt.format(r.date)}
                   </div>
                   <div className="text-xs text-forest-500 mt-0.5">
-                    {t("tableShort")} {r.tableNumber} · {r.partySize}{" "}
-                    {locale === "tr" ? "kişi" : "guests"}
+                    {r.partySize} {locale === "tr" ? "kişi" : "guests"}
                     {r.notes ? ` · ${r.notes}` : ""}
                   </div>
                 </div>

@@ -1,23 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { reserveTable } from "@/lib/actions/restaurant";
 import { Check, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  SEATS_PER_TABLE,
-  TABLE_NUMBERS,
-  TIME_SLOTS,
-} from "@/lib/restaurant-config";
+import { SEATS_PER_TABLE, TIME_SLOTS } from "@/lib/restaurant-config";
 
 interface Props {
-  /** Already-booked (date ISO, table number) pairs for the next 2 weeks. */
-  bookedSlots: { iso: string; tableNumber: number }[];
+  /**
+   * How many tables are already taken per exact datetime (ISO) in the
+   * booking window. Rendered as "fully booked" hints only — the customer
+   * never sees per-table detail. Capacity (10 tables) stays server-side
+   * and in the restaurant staff view only.
+   */
+  slotCounts: { iso: string; count: number }[];
+  /** Total tables available (kept server-side constant, passed through). */
+  totalTables: number;
 }
 
-export function RestaurantForm({ bookedSlots }: Props) {
+export function RestaurantForm({ slotCounts, totalTables }: Props) {
   const t = useTranslations("Restaurant");
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -26,59 +29,49 @@ export function RestaurantForm({ bookedSlots }: Props) {
 
   const [dateKey, setDateKey] = useState("");
   const [time, setTime] = useState<(typeof TIME_SLOTS)[number] | null>(null);
-  const [tableNumber, setTableNumber] = useState<number | null>(null);
   const [partySize, setPartySize] = useState(2);
   const [notes, setNotes] = useState("");
 
   const todayKey = new Date().toISOString().slice(0, 10);
 
-  // Build a set of taken tables for the currently-selected date+time.
-  // Keyed by ISO string so we match the server's Date serialization exactly.
-  const takenForSelection = useMemo(() => {
-    if (!dateKey || !time) return new Set<number>();
-    const d = new Date(`${dateKey}T00:00:00`);
-    d.setHours(time.hour, time.minute, 0, 0);
-    const iso = d.toISOString();
-    return new Set(
-      bookedSlots.filter((s) => s.iso === iso).map((s) => s.tableNumber),
-    );
-  }, [bookedSlots, dateKey, time]);
-
-  // If the user switches date/time and their previous table is now taken,
-  // clear the selection so they don't accidentally submit a doomed request.
-  useEffect(() => {
-    if (tableNumber && takenForSelection.has(tableNumber)) {
-      setTableNumber(null);
+  // Build a lookup of "taken count" for each time slot on the selected day.
+  // We only expose a BOOLEAN (full / not full) to the customer — the exact
+  // remaining count stays hidden to keep the UI simple and non-technical.
+  const fullSlots = useMemo(() => {
+    if (!dateKey) return new Set<string>();
+    const full = new Set<string>();
+    for (const tm of TIME_SLOTS) {
+      const d = new Date(`${dateKey}T00:00:00`);
+      d.setHours(tm.hour, tm.minute, 0, 0);
+      const iso = d.toISOString();
+      const hit = slotCounts.find((s) => s.iso === iso);
+      if (hit && hit.count >= totalTables) full.add(tm.label);
     }
-  }, [tableNumber, takenForSelection]);
-
-  const fullyBooked =
-    dateKey && time && takenForSelection.size >= TABLE_NUMBERS.length;
+    return full;
+  }, [slotCounts, dateKey, totalTables]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!time || !tableNumber) return;
+    if (!time || !dateKey) return;
     setError(null);
     start(async () => {
       const res = await reserveTable({
         dateKey,
         hour: time.hour,
         minute: time.minute,
-        tableNumber,
         partySize,
         notes: notes || undefined,
       });
       if (res.ok) {
         setFlash(t("success"));
         setTime(null);
-        setTableNumber(null);
         setNotes("");
         setDateKey("");
         setPartySize(2);
         router.refresh();
         setTimeout(() => setFlash(null), 3000);
-      } else if (res.error === "TABLE_TAKEN") {
-        setError(t("tableTaken"));
+      } else if (res.error === "FULLY_BOOKED") {
+        setError(t("fullyBooked"));
         router.refresh();
       } else if (res.error === "PAST") {
         setError(t("pastSlot"));
@@ -102,80 +95,40 @@ export function RestaurantForm({ bookedSlots }: Props) {
         />
       </div>
 
-      <div>
-        <label className="label-luxury">{t("time")}</label>
-        <div className="grid grid-cols-3 gap-2">
-          {TIME_SLOTS.map((tm) => {
-            const active = time?.label === tm.label;
-            return (
-              <button
-                type="button"
-                key={tm.label}
-                onClick={() => setTime(tm)}
-                className={cn(
-                  "px-2 py-2.5 rounded-lg border text-sm font-medium transition",
-                  active
-                    ? "bg-gradient-gold text-forest-950 border-transparent shadow-sm"
-                    : "bg-white border-forest-200 text-forest-700 hover:border-gold-400",
-                )}
-              >
-                {tm.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {dateKey && time && (
+      {dateKey && (
         <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <label className="label-luxury !mb-0">{t("table")}</label>
-            <span className="text-[11px] text-forest-500">
-              {TABLE_NUMBERS.length - takenForSelection.size} /{" "}
-              {TABLE_NUMBERS.length} {t("available")}
-            </span>
+          <label className="label-luxury">{t("time")}</label>
+          <div className="grid grid-cols-3 gap-2">
+            {TIME_SLOTS.map((tm) => {
+              const active = time?.label === tm.label;
+              const full = fullSlots.has(tm.label);
+              return (
+                <button
+                  type="button"
+                  key={tm.label}
+                  onClick={() => !full && setTime(tm)}
+                  disabled={full}
+                  className={cn(
+                    "px-2 py-2.5 rounded-lg border text-sm font-medium transition",
+                    full &&
+                      "bg-forest-50 border-forest-100 text-forest-300 cursor-not-allowed line-through",
+                    !full &&
+                      !active &&
+                      "bg-white border-forest-200 text-forest-700 hover:border-gold-400",
+                    active &&
+                      "bg-gradient-gold text-forest-950 border-transparent shadow-sm",
+                  )}
+                  title={full ? t("fullyBooked") : tm.label}
+                >
+                  {tm.label}
+                </button>
+              );
+            })}
           </div>
-
-          {fullyBooked ? (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-800">
-              {t("fullyBooked")}
-            </div>
-          ) : (
-            <div className="grid grid-cols-5 gap-2">
-              {TABLE_NUMBERS.map((n) => {
-                const taken = takenForSelection.has(n);
-                const active = tableNumber === n;
-                return (
-                  <button
-                    type="button"
-                    key={n}
-                    onClick={() => !taken && setTableNumber(n)}
-                    disabled={taken}
-                    className={cn(
-                      "relative aspect-square rounded-xl border-2 font-display text-lg transition",
-                      taken &&
-                        "bg-forest-50 border-forest-100 text-forest-300 cursor-not-allowed",
-                      !taken &&
-                        !active &&
-                        "bg-white border-forest-200 text-forest-700 hover:border-gold-400",
-                      active &&
-                        "bg-gradient-gold border-transparent text-forest-950 shadow-sm",
-                    )}
-                    title={taken ? t("tableTaken") : `${t("table")} ${n}`}
-                  >
-                    {n}
-                    <span className="absolute bottom-0.5 inset-x-0 text-[9px] uppercase tracking-wider opacity-70">
-                      {taken ? t("booked") : `${SEATS_PER_TABLE} ${t("seats")}`}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 
-      {tableNumber != null && (
+      {time && (
         <div>
           <label className="label-luxury">{t("partySize")}</label>
           <div className="flex items-center gap-3">
@@ -191,8 +144,7 @@ export function RestaurantForm({ bookedSlots }: Props) {
                 {partySize}
               </div>
               <div className="text-[10px] uppercase tracking-wider text-forest-500 mt-1 flex items-center justify-center gap-1">
-                <Users className="w-3 h-3" />{" "}
-                {partySize} / {SEATS_PER_TABLE}
+                <Users className="w-3 h-3" /> {partySize} / {SEATS_PER_TABLE}
               </div>
             </div>
             <button
@@ -227,7 +179,7 @@ export function RestaurantForm({ bookedSlots }: Props) {
 
       <button
         type="submit"
-        disabled={pending || !time || !dateKey || !tableNumber}
+        disabled={pending || !time || !dateKey}
         className="btn-gold w-full"
       >
         {pending ? "..." : t("book")}

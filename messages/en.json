@@ -86,7 +86,7 @@
   },
   "Restaurant": {
     "title": "Restaurant Reservation",
-    "subtitle": "Dinner reservations 6:00 PM – 10:30 PM. 10 tables · 4 seats each · max 40 guests.",
+    "subtitle": "Dinner reservations 6:00 PM – 10:30 PM. Pick a date, time, and party size.",
     "date": "Date",
     "time": "Time",
     "table": "Table",
