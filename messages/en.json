@@ -62,7 +62,11 @@
     "confirmTitle": "Confirm Reservation",
     "confirmBody": "Are you sure you want to book this tennis slot? A confirmation email will be sent to you.",
     "confirmYes": "Yes, book it",
-    "confirmNo": "Cancel"
+    "confirmNo": "Cancel",
+    "cancelConfirmTitle": "Cancel Reservation",
+    "cancelConfirmBody": "Are you sure you want to cancel this tennis booking? This action can't be undone.",
+    "cancelConfirmYes": "Yes, cancel it",
+    "cancelConfirmNo": "Keep it"
   },
   "PartyHouse": {
     "title": "Party House",

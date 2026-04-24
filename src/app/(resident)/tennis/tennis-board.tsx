@@ -52,6 +52,16 @@ export function TennisBoard({
     hour: number;
   } | null>(null);
 
+  // Separate state for the cancel-confirmation dialog. We keep the
+  // minimal info needed to both (a) issue the cancel server action and
+  // (b) render the same summary card in the dialog body.
+  const [cancelConfirm, setCancelConfirm] = useState<{
+    id: string;
+    courtName: string;
+    startHour: number;
+    dateISO: string;
+  } | null>(null);
+
   // Portal target. We only render the confirm modal after mount so SSR
   // doesn't choke on `document`. Rendering the modal via createPortal to
   // document.body is essential: `<main>` has `animate-fade-up` which leaves
@@ -109,8 +119,9 @@ export function TennisBoard({
     setConfirm({ courtId, courtName, hour });
   };
 
-  const onCancel = (id: string) => {
+  const doCancel = (id: string) => {
     if (pending) return;
+    setCancelConfirm(null);
     start(async () => {
       await cancelTennisBooking({ id });
       setFlash(t("cancelledSuccess"));
@@ -203,7 +214,14 @@ export function TennisBoard({
                       </div>
                       {mine && (
                         <button
-                          onClick={() => onCancel(b.id)}
+                          onClick={() =>
+                            setCancelConfirm({
+                              id: b.id,
+                              courtName: court.name,
+                              startHour: h,
+                              dateISO: selectedDate.toISOString(),
+                            })
+                          }
                           disabled={pending}
                           className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-forest-700 hover:text-red-700"
                         >
@@ -317,6 +335,90 @@ export function TennisBoard({
         document.body,
       )}
 
+      {/* Cancel confirmation modal — same style as the booking modal,
+          but with a red header to signal a destructive action. Also
+          portaled to body to escape <main>'s stacking context. */}
+      {cancelConfirm && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => !pending && setCancelConfirm(null)}
+        >
+          <div
+            className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-ivory-50 rounded-3xl shadow-edel-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header — red gradient so users instantly read this as destructive */}
+            <div
+              className="px-6 py-5 text-center"
+              style={{
+                background:
+                  "linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)",
+              }}
+            >
+              <div className="text-[10px] uppercase tracking-[0.2em] text-red-200 mb-1">
+                {t("title")}
+              </div>
+              <h3 className="text-ivory-50 font-display text-2xl">
+                {t("cancelConfirmTitle")}
+              </h3>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6">
+              <div className="space-y-3 mb-5">
+                <div className="flex justify-between items-baseline border-b border-itokent-100 pb-2">
+                  <span className="text-[11px] uppercase tracking-wider text-forest-500">
+                    {t("court")}
+                  </span>
+                  <span className="font-semibold text-forest-900">
+                    {cancelConfirm.courtName}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline border-b border-itokent-100 pb-2">
+                  <span className="text-[11px] uppercase tracking-wider text-forest-500">
+                    {t("selectDate")}
+                  </span>
+                  <span className="font-semibold text-forest-900 text-right">
+                    {fmtDayLong.format(new Date(cancelConfirm.dateISO))}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline pb-1">
+                  <span className="text-[11px] uppercase tracking-wider text-forest-500">
+                    {t("slot")}
+                  </span>
+                  <span className="font-semibold text-forest-900">
+                    {String(cancelConfirm.startHour).padStart(2, "0")}:00 –{" "}
+                    {String(cancelConfirm.startHour + 1).padStart(2, "0")}:00
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-forest-700 leading-relaxed mb-6">
+                {t("cancelConfirmBody")}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setCancelConfirm(null)}
+                  disabled={pending}
+                  className="btn-outline py-3 text-sm"
+                >
+                  {t("cancelConfirmNo")}
+                </button>
+                <button
+                  onClick={() => doCancel(cancelConfirm.id)}
+                  disabled={pending}
+                  className="py-3 text-sm rounded-full font-semibold text-white bg-red-700 hover:bg-red-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {pending ? "…" : t("cancelConfirmYes")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
       {/* My upcoming */}
       {myUpcoming.length > 0 && (
         <section>
@@ -336,9 +438,17 @@ export function TennisBoard({
                     <div className="text-xs text-forest-500">{fmtDayLong.format(d)}</div>
                   </div>
                   <button
-                    onClick={() => onCancel(b.id)}
+                    onClick={() =>
+                      setCancelConfirm({
+                        id: b.id,
+                        courtName: b.courtName,
+                        startHour: b.startHour,
+                        dateISO: b.dateISO,
+                      })
+                    }
                     disabled={pending}
                     className="text-xs text-red-600 hover:text-red-700 p-2"
+                    aria-label={t("cancel")}
                   >
                     <X className="w-4 h-4" />
                   </button>

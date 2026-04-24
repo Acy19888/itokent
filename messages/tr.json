@@ -62,7 +62,11 @@
     "confirmTitle": "Rezervasyonu Onayla",
     "confirmBody": "Bu tenis rezervasyonunu oluşturmak istediğinizden emin misiniz? Onaylandığında size bir onay e-postası gönderilecektir.",
     "confirmYes": "Evet, Rezerve Et",
-    "confirmNo": "Vazgeç"
+    "confirmNo": "Vazgeç",
+    "cancelConfirmTitle": "Rezervasyonu İptal Et",
+    "cancelConfirmBody": "Bu tenis rezervasyonunu iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "cancelConfirmYes": "Evet, İptal Et",
+    "cancelConfirmNo": "Vazgeç"
   },
   "PartyHouse": {
     "title": "Parti Evi",
