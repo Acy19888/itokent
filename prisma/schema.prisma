@@ -35,8 +35,9 @@ model User {
   restaurantRes        RestaurantReservation[]
   guests               Guest[]
   maintenanceTickets   MaintenanceTicket[]
-  eventsCreated        Event[]         @relation("EventCreator")
-  announcementsCreated Announcement[]  @relation("AnnouncementAuthor")
+  eventsCreated        Event[]          @relation("EventCreator")
+  eventRsvps           EventAttendee[]
+  announcementsCreated Announcement[]   @relation("AnnouncementAuthor")
 }
 
 // ─── Villa ────────────────────────────────────────────────────────────
@@ -85,6 +86,11 @@ model PartyHouseBooking {
   guestCount Int
   notes      String?
   status     String   @default("PENDING")  // PENDING, APPROVED, REJECTED, CANCELLED
+  // Admin can set a rental fee when approving.  Minor units (kuruş).
+  feeAmount  Int?
+  feeCurrency String? @default("TRY")
+  paid       Boolean  @default(false)
+  paidAt     DateTime?
   createdAt  DateTime @default(now())
 
   @@unique([date], name: "one_party_per_day")
@@ -125,9 +131,34 @@ model Event {
   startsAt    DateTime
   endsAt      DateTime
   imageUrl    String?
+  // Optional attendance fee in MINOR UNITS (kuruş for TRY, cents for USD).
+  // Using an integer avoids float rounding errors on money. null = free.
+  feeAmount   Int?
+  feeCurrency String?  @default("TRY")
   createdById String
   createdBy   User     @relation("EventCreator", fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
+  attendees   EventAttendee[]
+}
+
+// One row per (event, user) RSVP. A user can toggle attendance on/off;
+// we delete the row rather than tracking a status field to keep the
+// attendee count query trivially `count()`.
+model EventAttendee {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // If the event has a fee, record whether this attendee has paid.
+  // For free events this stays false and is ignored.
+  paid      Boolean  @default(false)
+  paidAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId], name: "one_rsvp_per_user_per_event")
+  @@index([eventId])
+  @@index([userId])
 }
 
 // ─── Guests (security / gate) ─────────────────────────────────────────

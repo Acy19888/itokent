@@ -19,19 +19,26 @@ export function EventForm() {
   const [location, setLocation] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  // Fee in whole-TRY (e.g. "50" for 50 TL). Empty string = free event.
+  const [feeTry, setFeeTry] = useState<string>("");
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     start(async () => {
+      // Convert TRY → kuruş (minor units) for the server.
+      const feeAmount =
+        feeTry.trim() === "" ? null : Math.round(Number(feeTry) * 100);
       const res = await createEvent({
         titleTr, titleEn, descTr, descEn, location,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
+        feeAmount,
+        feeCurrency: "TRY",
       });
       if (res.ok) {
         setOk(true);
         setTitleTr(""); setTitleEn(""); setDescTr(""); setDescEn("");
-        setLocation(""); setStartsAt(""); setEndsAt("");
+        setLocation(""); setStartsAt(""); setEndsAt(""); setFeeTry("");
         router.refresh();
         setTimeout(() => setOk(false), 2500);
       }
@@ -73,6 +80,20 @@ export function EventForm() {
           <label className="label-luxury">Ends</label>
           <input required type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className="input-luxury" />
         </div>
+      </div>
+      <div>
+        <label className="label-luxury">
+          Ücret (TL) · optional — boş bırakırsanız ücretsiz
+        </label>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          placeholder="0 = ücretsiz"
+          value={feeTry}
+          onChange={(e) => setFeeTry(e.target.value)}
+          className="input-luxury"
+        />
       </div>
       <button type="submit" disabled={pending} className="btn-gold w-full md:w-auto">
         {pending ? "..." : t("save")}

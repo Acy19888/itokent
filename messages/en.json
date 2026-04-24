@@ -111,7 +111,16 @@
     "subtitle": "Upcoming community events",
     "noEvents": "No events scheduled.",
     "location": "Location",
-    "when": "When"
+    "when": "When",
+    "back": "Back to events",
+    "rsvp": "I'd like to attend",
+    "attendingYou": "You're attending",
+    "attending": "attending",
+    "rsvpCancelHint": "tap to cancel",
+    "rsvpError": "Could not update your RSVP, please try again.",
+    "pastEvent": "This event has already ended.",
+    "fee": "Fee",
+    "paymentPending": "Please complete your payment to secure your spot."
   },
   "Guests": {
     "title": "Guest Registration",

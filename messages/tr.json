@@ -111,7 +111,16 @@
     "subtitle": "Topluluğumuzun yaklaşan etkinlikleri",
     "noEvents": "Şu an planlanmış bir etkinlik yok.",
     "location": "Yer",
-    "when": "Zaman"
+    "when": "Zaman",
+    "back": "Etkinliklere dön",
+    "rsvp": "Katılmak istiyorum",
+    "attendingYou": "Katılıyorsunuz",
+    "attending": "katılımcı",
+    "rsvpCancelHint": "iptal etmek için dokun",
+    "rsvpError": "Katılım bilgisi güncellenemedi, lütfen tekrar deneyin.",
+    "pastEvent": "Bu etkinlik sona erdi.",
+    "fee": "Ücret",
+    "paymentPending": "Yerinizi kesinleştirmek için lütfen ödemeyi tamamlayın."
   },
   "Guests": {
     "title": "Misafir Girişi",

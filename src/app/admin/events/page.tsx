@@ -10,6 +10,7 @@ export default async function AdminEvents() {
   const events = await prisma.event.findMany({
     orderBy: { startsAt: "desc" },
     take: 50,
+    include: { _count: { select: { attendees: true } } },
   });
 
   const fmt = new Intl.DateTimeFormat(locale, {
@@ -40,6 +41,19 @@ export default async function AdminEvents() {
                 </div>
                 <div className="text-xs text-forest-500 mt-0.5">
                   {fmt.format(e.startsAt)} · {e.location}
+                </div>
+                <div className="text-xs text-forest-600 mt-1">
+                  {e._count.attendees}{" "}
+                  {locale === "tr" ? "katılımcı" : "attending"}
+                  {e.feeAmount != null && e.feeAmount > 0 && (
+                    <span className="ml-2 text-gold-700">
+                      ·{" "}
+                      {(e.feeAmount / 100).toLocaleString(locale, {
+                        style: "currency",
+                        currency: e.feeCurrency ?? "TRY",
+                      })}
+                    </span>
+                  )}
                 </div>
               </div>
               <DeleteEvent id={e.id} />

@@ -30,6 +30,10 @@ const eventSchema = z.object({
   location: z.string().min(2).max(120),
   startsAt: z.string(),
   endsAt: z.string(),
+  // Optional attendance fee. The admin form collects whole-TRY numbers,
+  // we convert to minor units (kuruş) when persisting.
+  feeAmount: z.number().int().min(0).max(100_000_000).nullable().optional(),
+  feeCurrency: z.string().length(3).optional(),
 });
 
 export async function createEvent(input: z.infer<typeof eventSchema>) {
@@ -37,9 +41,18 @@ export async function createEvent(input: z.infer<typeof eventSchema>) {
   const parsed = eventSchema.parse(input);
   await prisma.event.create({
     data: {
-      ...parsed,
+      titleTr: parsed.titleTr,
+      titleEn: parsed.titleEn,
+      descTr: parsed.descTr,
+      descEn: parsed.descEn,
+      location: parsed.location,
       startsAt: new Date(parsed.startsAt),
       endsAt: new Date(parsed.endsAt),
+      feeAmount:
+        parsed.feeAmount != null && parsed.feeAmount > 0
+          ? parsed.feeAmount
+          : null,
+      feeCurrency: parsed.feeCurrency ?? "TRY",
       createdById: user.id,
     },
   });
