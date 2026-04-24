@@ -4,6 +4,11 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import {
+  sendEmail,
+  eventRsvpEmail,
+  eventRsvpCancelEmail,
+} from "@/lib/email";
 
 const idSchema = z.object({ eventId: z.string().min(1) });
 
@@ -15,7 +20,8 @@ const idSchema = z.object({ eventId: z.string().min(1) });
  * - Row exists → delete it (user changed their mind).
  *
  * Returns the resulting state so the client can update its toggle
- * without another round-trip.
+ * without another round-trip. Fires fire-and-forget email on both
+ * transitions (opt-in confirmation, opt-out cancellation).
  */
 export async function toggleEventAttendance(
   input: z.infer<typeof idSchema>,
@@ -26,7 +32,17 @@ export async function toggleEventAttendance(
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, startsAt: true, feeAmount: true },
+      // We need title/location/startsAt for both the RSVP email and the
+      // "needsPayment" decision.
+      select: {
+        id: true,
+        startsAt: true,
+        endsAt: true,
+        location: true,
+        titleTr: true,
+        titleEn: true,
+        feeAmount: true,
+      },
     });
     if (!event) return { ok: false as const, error: "NOT_FOUND" as const };
 
@@ -34,6 +50,13 @@ export async function toggleEventAttendance(
     if (event.startsAt.getTime() < Date.now()) {
       return { ok: false as const, error: "PAST" as const };
     }
+
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { email: true, name: true, locale: true },
+    });
+    const localeKey: "tr" | "en" = fullUser?.locale === "en" ? "en" : "tr";
+    const title = localeKey === "en" ? event.titleEn : event.titleTr;
 
     const existing = await prisma.eventAttendee.findUnique({
       where: {
@@ -43,6 +66,19 @@ export async function toggleEventAttendance(
 
     if (existing) {
       await prisma.eventAttendee.delete({ where: { id: existing.id } });
+
+      if (fullUser?.email) {
+        const { subject, html } = eventRsvpCancelEmail({
+          locale: localeKey,
+          userName: fullUser.name,
+          eventTitle: title,
+          startsAt: event.startsAt,
+        });
+        void sendEmail({ to: fullUser.email, subject, html }).catch((err) => {
+          console.error("[events.toggle] cancel email failed", err?.message);
+        });
+      }
+
       revalidatePath(`/events/${eventId}`);
       revalidatePath("/events");
       revalidatePath("/home");
@@ -52,14 +88,30 @@ export async function toggleEventAttendance(
     await prisma.eventAttendee.create({
       data: { eventId, userId: user.id },
     });
+
+    const hasFee = event.feeAmount != null && event.feeAmount > 0;
+    if (fullUser?.email) {
+      const { subject, html } = eventRsvpEmail({
+        locale: localeKey,
+        userName: fullUser.name,
+        eventTitle: title,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        location: event.location,
+        hasFee,
+      });
+      void sendEmail({ to: fullUser.email, subject, html }).catch((err) => {
+        console.error("[events.toggle] rsvp email failed", err?.message);
+      });
+    }
+
     revalidatePath(`/events/${eventId}`);
     revalidatePath("/events");
     revalidatePath("/home");
-    // Signal whether the UI should prompt for payment next.
     return {
       ok: true as const,
       attending: true,
-      needsPayment: event.feeAmount != null && event.feeAmount > 0,
+      needsPayment: hasFee,
     };
   } catch (e: any) {
     console.error("[events.toggleAttendance]", e?.message);

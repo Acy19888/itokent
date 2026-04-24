@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addDays, startOfDay } from "@/lib/utils";
 import { RestaurantForm } from "./restaurant-form";
-import { TOTAL_TABLES } from "@/lib/restaurant-config";
+import { TOTAL_SEATS } from "@/lib/restaurant-config";
 
 export default async function RestaurantPage() {
   const session = await auth();
@@ -27,20 +27,19 @@ export default async function RestaurantPage() {
         date: { gte: today, lt: windowEnd },
         status: { not: "CANCELLED" },
       },
-      select: { date: true },
+      select: { date: true, partySize: true },
     }),
   ]);
 
-  // Aggregate to "how many tables booked at each exact datetime". The
-  // customer form only needs a boolean (full / not full) — we do NOT
-  // leak per-table detail. Capacity math stays server-side and in
-  // /restaurant-app (staff view) only.
-  const countsMap = new Map<string, number>();
+  // Aggregate to "how many SEATS booked at each exact datetime". The
+  // customer form uses this to disable slots that can't fit the current
+  // party size. We never leak the actual total capacity as a number.
+  const seatsMap = new Map<string, number>();
   for (const r of confirmed) {
     const iso = r.date.toISOString();
-    countsMap.set(iso, (countsMap.get(iso) ?? 0) + 1);
+    seatsMap.set(iso, (seatsMap.get(iso) ?? 0) + r.partySize);
   }
-  const slotCounts = Array.from(countsMap, ([iso, count]) => ({ iso, count }));
+  const slotSeats = Array.from(seatsMap, ([iso, seats]) => ({ iso, seats }));
 
   const fmt = new Intl.DateTimeFormat(locale, {
     weekday: "short",
@@ -58,7 +57,7 @@ export default async function RestaurantPage() {
       </header>
 
       <div className="card-luxury p-5">
-        <RestaurantForm slotCounts={slotCounts} totalTables={TOTAL_TABLES} />
+        <RestaurantForm slotSeats={slotSeats} totalSeats={TOTAL_SEATS} />
       </div>
 
       {mine.length > 0 && (

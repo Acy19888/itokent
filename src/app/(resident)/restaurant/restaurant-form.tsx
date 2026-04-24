@@ -6,21 +6,19 @@ import { useRouter } from "next/navigation";
 import { reserveTable } from "@/lib/actions/restaurant";
 import { Check, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SEATS_PER_TABLE, TIME_SLOTS } from "@/lib/restaurant-config";
+import { MAX_PARTY_SIZE, TIME_SLOTS } from "@/lib/restaurant-config";
 
 interface Props {
-  /**
-   * How many tables are already taken per exact datetime (ISO) in the
-   * booking window. Rendered as "fully booked" hints only — the customer
-   * never sees per-table detail. Capacity (10 tables) stays server-side
-   * and in the restaurant staff view only.
-   */
-  slotCounts: { iso: string; count: number }[];
-  /** Total tables available (kept server-side constant, passed through). */
-  totalTables: number;
+  /** For each exact datetime in the booking window, the total number
+   *  of seats already booked. Used to derive free-seats per slot and
+   *  whether a slot is full for the current party size. */
+  slotSeats: { iso: string; seats: number }[];
+  /** Total seat capacity across the restaurant (passed through from
+   *  the server; not exposed numerically to the customer). */
+  totalSeats: number;
 }
 
-export function RestaurantForm({ slotCounts, totalTables }: Props) {
+export function RestaurantForm({ slotSeats, totalSeats }: Props) {
   const t = useTranslations("Restaurant");
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -34,21 +32,20 @@ export function RestaurantForm({ slotCounts, totalTables }: Props) {
 
   const todayKey = new Date().toISOString().slice(0, 10);
 
-  // Build a lookup of "taken count" for each time slot on the selected day.
-  // We only expose a BOOLEAN (full / not full) to the customer — the exact
-  // remaining count stays hidden to keep the UI simple and non-technical.
-  const fullSlots = useMemo(() => {
-    if (!dateKey) return new Set<string>();
-    const full = new Set<string>();
+  // For each slot label, how many seats are still free on the selected date.
+  // A slot is disabled only when there aren't enough seats for this party.
+  const freeByLabel = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!dateKey) return map;
     for (const tm of TIME_SLOTS) {
       const d = new Date(`${dateKey}T00:00:00`);
       d.setHours(tm.hour, tm.minute, 0, 0);
       const iso = d.toISOString();
-      const hit = slotCounts.find((s) => s.iso === iso);
-      if (hit && hit.count >= totalTables) full.add(tm.label);
+      const taken = slotSeats.find((s) => s.iso === iso)?.seats ?? 0;
+      map.set(tm.label, Math.max(0, totalSeats - taken));
     }
-    return full;
-  }, [slotCounts, dateKey, totalTables]);
+    return map;
+  }, [slotSeats, dateKey, totalSeats]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +98,9 @@ export function RestaurantForm({ slotCounts, totalTables }: Props) {
           <div className="grid grid-cols-3 gap-2">
             {TIME_SLOTS.map((tm) => {
               const active = time?.label === tm.label;
-              const full = fullSlots.has(tm.label);
+              const free = freeByLabel.get(tm.label) ?? totalSeats;
+              // A slot is disabled if the current party size can't fit.
+              const full = free < partySize;
               return (
                 <button
                   type="button"
@@ -128,37 +127,36 @@ export function RestaurantForm({ slotCounts, totalTables }: Props) {
         </div>
       )}
 
-      {time && (
-        <div>
-          <label className="label-luxury">{t("partySize")}</label>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setPartySize(Math.max(1, partySize - 1))}
-              className="w-10 h-10 rounded-full border border-forest-200 text-forest-700 hover:border-gold-400"
-            >
-              −
-            </button>
-            <div className="flex-1 text-center">
-              <div className="text-2xl font-display text-forest-900 leading-none">
-                {partySize}
-              </div>
-              <div className="text-[10px] uppercase tracking-wider text-forest-500 mt-1 flex items-center justify-center gap-1">
-                <Users className="w-3 h-3" /> {partySize} / {SEATS_PER_TABLE}
-              </div>
+      <div>
+        <label className="label-luxury">{t("partySize")}</label>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setPartySize(Math.max(1, partySize - 1))}
+            className="w-10 h-10 rounded-full border border-forest-200 text-forest-700 hover:border-gold-400"
+          >
+            −
+          </button>
+          <div className="flex-1 text-center">
+            <div className="text-2xl font-display text-forest-900 leading-none">
+              {partySize}
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                setPartySize(Math.min(SEATS_PER_TABLE, partySize + 1))
-              }
-              className="w-10 h-10 rounded-full border border-forest-200 text-forest-700 hover:border-gold-400"
-            >
-              +
-            </button>
+            <div className="text-[10px] uppercase tracking-wider text-forest-500 mt-1 flex items-center justify-center gap-1">
+              <Users className="w-3 h-3" />
+              {t("partySize").toLowerCase()}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() =>
+              setPartySize(Math.min(MAX_PARTY_SIZE, partySize + 1))
+            }
+            className="w-10 h-10 rounded-full border border-forest-200 text-forest-700 hover:border-gold-400"
+          >
+            +
+          </button>
         </div>
-      )}
+      </div>
 
       <div>
         <label className="label-luxury">{t("notes")}</label>
