@@ -82,7 +82,11 @@
     "rejected": "Reddedildi",
     "cancelled": "İptal",
     "myRequests": "Taleplerim",
-    "requestSubmitted": "Talebiniz gönderildi, yönetim inceleyecektir."
+    "requestSubmitted": "Talebiniz gönderildi, yönetim inceleyecektir.",
+    "fee": "Kira ücreti",
+    "paid": "ödendi",
+    "payNow": "Şimdi öde",
+    "back": "Geri"
   },
   "Restaurant": {
     "title": "Restoran Rezervasyonu",
@@ -120,7 +124,23 @@
     "rsvpError": "Katılım bilgisi güncellenemedi, lütfen tekrar deneyin.",
     "pastEvent": "Bu etkinlik sona erdi.",
     "fee": "Ücret",
-    "paymentPending": "Yerinizi kesinleştirmek için lütfen ödemeyi tamamlayın."
+    "paymentPending": "Yerinizi kesinleştirmek için lütfen ödemeyi tamamlayın.",
+    "payNow": "Şimdi öde"
+  },
+  "Payment": {
+    "amount": "Ödenecek tutar",
+    "holder": "Kart sahibi",
+    "number": "Kart numarası",
+    "expiry": "Son kullanma",
+    "cvc": "CVC",
+    "payNow": "Ödemeyi tamamla",
+    "processing": "İşleniyor...",
+    "success": "Ödeme alındı",
+    "demoBanner": "Demo modu — gerçek bir ödeme yapılmaz.",
+    "errCardInvalid": "Kart numarası geçersiz görünüyor.",
+    "errCardExpired": "Bu kartın süresi dolmuş.",
+    "errNotApproved": "Bu rezervasyon henüz onaylanmadı.",
+    "errGeneric": "Ödeme tamamlanamadı. Lütfen tekrar deneyin."
   },
   "Guests": {
     "title": "Misafir Girişi",
@@ -220,6 +240,8 @@
     "createEvent": "Yeni Etkinlik",
     "createAnnouncement": "Yeni Duyuru",
     "approve": "Onayla",
+    "approveWithFee": "Onayla",
+    "markPaid": "Ödendi olarak işaretle",
     "reject": "Reddet",
     "markResolved": "Çözüldü",
     "markInProgress": "İşlemde",

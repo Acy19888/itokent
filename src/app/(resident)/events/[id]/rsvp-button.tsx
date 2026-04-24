@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Check, UserPlus, UserMinus } from "lucide-react";
+import Link from "next/link";
+import { Check, UserPlus, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toggleEventAttendance } from "@/lib/actions/events";
 
@@ -29,20 +30,25 @@ export function RsvpButton({
   const [paid] = useState(initialPaid);
   const [error, setError] = useState<string | null>(null);
 
-  // For paid events: if the user is RSVP'd but hasn't paid, surface that.
-  // Actual checkout integration is wired up once we pick a provider.
+  // For paid events: if the user is RSVP'd but hasn't paid, surface that
+  // as the primary CTA so they can complete checkout.
   const paymentPending = attending && hasFee && !paid;
 
   const onToggle = () => {
     setError(null);
     start(async () => {
       const res = await toggleEventAttendance({ eventId });
-      if (res.ok) {
-        setAttending(res.attending);
-        router.refresh();
-      } else {
+      if (!res.ok) {
         setError(t("rsvpError"));
+        return;
       }
+      setAttending(res.attending);
+      // For paid events, a fresh RSVP → straight to checkout.
+      if (res.attending && res.needsPayment) {
+        router.push(`/events/${eventId}/checkout`);
+        return;
+      }
+      router.refresh();
     });
   };
 
@@ -77,10 +83,13 @@ export function RsvpButton({
       </button>
 
       {paymentPending && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {t("paymentPending")}
-          {feeDisplay ? ` (${feeDisplay})` : null}
-        </div>
+        <Link
+          href={`/events/${eventId}/checkout`}
+          className="btn-gold w-full flex items-center justify-center gap-2"
+        >
+          <CreditCard className="w-4 h-4" />
+          {t("payNow")} {feeDisplay ? `· ${feeDisplay}` : null}
+        </Link>
       )}
 
       {error && (

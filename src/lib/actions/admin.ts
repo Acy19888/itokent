@@ -6,9 +6,32 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 
 // ─── Party House approvals ────────────────────────────────────────────
-export async function approveParty(id: string) {
+// Admin approves a booking and may attach a rental fee.  The fee is
+// passed in whole-TRY (e.g. 5000 for 5.000 TL) and stored in minor units.
+export async function approveParty(id: string, feeTry?: number | null) {
   await requireRole("ADMIN");
-  await prisma.partyHouseBooking.update({ where: { id }, data: { status: "APPROVED" } });
+  const feeAmount =
+    feeTry != null && feeTry > 0 ? Math.round(feeTry * 100) : null;
+  await prisma.partyHouseBooking.update({
+    where: { id },
+    data: {
+      status: "APPROVED",
+      feeAmount,
+      feeCurrency: feeAmount != null ? "TRY" : null,
+    },
+  });
+  revalidatePath("/admin");
+  revalidatePath("/party-house");
+  return { ok: true as const };
+}
+
+/** Admin marks a party-house booking as paid manually (e.g. bank transfer). */
+export async function markPartyPaid(id: string) {
+  await requireRole("ADMIN");
+  await prisma.partyHouseBooking.update({
+    where: { id },
+    data: { paid: true, paidAt: new Date() },
+  });
   revalidatePath("/admin");
   revalidatePath("/party-house");
   return { ok: true as const };

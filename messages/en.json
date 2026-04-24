@@ -82,7 +82,11 @@
     "rejected": "Rejected",
     "cancelled": "Cancelled",
     "myRequests": "My requests",
-    "requestSubmitted": "Your request has been submitted for review."
+    "requestSubmitted": "Your request has been submitted for review.",
+    "fee": "Rental fee",
+    "paid": "paid",
+    "payNow": "Pay now",
+    "back": "Back"
   },
   "Restaurant": {
     "title": "Restaurant Reservation",
@@ -120,7 +124,23 @@
     "rsvpError": "Could not update your RSVP, please try again.",
     "pastEvent": "This event has already ended.",
     "fee": "Fee",
-    "paymentPending": "Please complete your payment to secure your spot."
+    "paymentPending": "Please complete your payment to secure your spot.",
+    "payNow": "Pay now"
+  },
+  "Payment": {
+    "amount": "Amount due",
+    "holder": "Cardholder name",
+    "number": "Card number",
+    "expiry": "Expiry",
+    "cvc": "CVC",
+    "payNow": "Pay now",
+    "processing": "Processing...",
+    "success": "Payment received",
+    "demoBanner": "Demo mode — no real charge is made.",
+    "errCardInvalid": "Card number looks invalid.",
+    "errCardExpired": "This card has expired.",
+    "errNotApproved": "This booking isn't approved yet.",
+    "errGeneric": "Payment could not be completed. Please try again."
   },
   "Guests": {
     "title": "Guest Registration",
@@ -220,6 +240,8 @@
     "createEvent": "New event",
     "createAnnouncement": "New announcement",
     "approve": "Approve",
+    "approveWithFee": "Approve",
+    "markPaid": "Mark paid",
     "reject": "Reject",
     "markResolved": "Mark resolved",
     "markInProgress": "In progress",

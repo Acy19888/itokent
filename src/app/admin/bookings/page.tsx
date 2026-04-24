@@ -59,7 +59,24 @@ export default async function AdminBookings() {
                     <span className={"badge " + (b.status === "APPROVED" ? "badge-high" : "badge-normal")}>
                       {b.status}
                     </span>
-                    {b.status === "PENDING" && <PartyActions id={b.id} />}
+                    {b.feeAmount != null && b.feeAmount > 0 && (
+                      <span className={
+                        "text-xs font-medium " +
+                        (b.paid ? "text-forest-600" : "text-gold-700")
+                      }>
+                        {(b.feeAmount / 100).toLocaleString(locale, {
+                          style: "currency",
+                          currency: b.feeCurrency ?? "TRY",
+                        })}
+                        {b.paid ? ` · ${locale === "tr" ? "ödendi" : "paid"}` : ""}
+                      </span>
+                    )}
+                    <PartyActions
+                      id={b.id}
+                      status={b.status}
+                      existingFee={b.feeAmount}
+                      paid={b.paid}
+                    />
                   </div>
                 </div>
               </div>
