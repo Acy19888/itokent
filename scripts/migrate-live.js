@@ -76,6 +76,22 @@ const statements = [
    )`,
   `CREATE INDEX IF NOT EXISTS "EmailVerification_email_idx"
      ON "EmailVerification"("email")`,
+
+  // RestaurantTable — staff-editable table catalog for the dining room.
+  `CREATE TABLE IF NOT EXISTS "RestaurantTable" (
+     "id" TEXT NOT NULL,
+     "number" INTEGER NOT NULL,
+     "seats" INTEGER NOT NULL DEFAULT 4,
+     "x" INTEGER NOT NULL DEFAULT 500,
+     "y" INTEGER NOT NULL DEFAULT 300,
+     "shape" TEXT NOT NULL DEFAULT 'ROUND',
+     "active" BOOLEAN NOT NULL DEFAULT true,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     "updatedAt" TIMESTAMP(3) NOT NULL,
+     CONSTRAINT "RestaurantTable_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "RestaurantTable_number_key"
+     ON "RestaurantTable"("number")`,
 ];
 
 (async () => {
@@ -106,6 +122,10 @@ const statements = [
       `SELECT to_regclass('public."EmailVerification"')::text AS exists`,
     );
     console.log("EmailVerification table:", tbl2[0].exists);
+    const tbl3 = await prisma.$queryRawUnsafe(
+      `SELECT to_regclass('public."RestaurantTable"')::text AS exists`,
+    );
+    console.log("RestaurantTable table:", tbl3[0].exists);
     console.log("\n✓ Migration complete.");
   } finally {
     await prisma.$disconnect();

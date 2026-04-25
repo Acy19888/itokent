@@ -2,8 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { signOut } from "next-auth/react";
-import { UtensilsCrossed, LogOut } from "lucide-react";
+import { UtensilsCrossed, LogOut, LayoutDashboard, LayoutGrid } from "lucide-react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function RestaurantShell({
   children,
@@ -14,6 +16,9 @@ export function RestaurantShell({
 }) {
   const t = useTranslations("RestaurantApp");
   const brand = useTranslations("Brand");
+  const pathname = usePathname();
+
+  const isLayout = pathname?.startsWith("/restaurant-app/layout-config");
 
   return (
     <div className="min-h-screen bg-itokent-canvas text-ivory-50">
@@ -49,6 +54,32 @@ export function RestaurantShell({
             </button>
           </div>
         </div>
+        <nav className="max-w-5xl mx-auto px-4 -mt-1 pb-2 flex gap-2 text-sm">
+          <Link
+            href="/restaurant-app"
+            className={
+              "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition " +
+              (!isLayout
+                ? "bg-brass-400/15 text-brass-300 border border-brass-400/30"
+                : "text-cream-300 hover:text-cream-50")
+            }
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            {t("navReservations")}
+          </Link>
+          <Link
+            href="/restaurant-app/layout-config"
+            className={
+              "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition " +
+              (isLayout
+                ? "bg-brass-400/15 text-brass-300 border border-brass-400/30"
+                : "text-cream-300 hover:text-cream-50")
+            }
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            {t("navLayout")}
+          </Link>
+        </nav>
         <span className="block h-px bg-gradient-to-r from-transparent via-brass-400/40 to-transparent" />
       </header>
 

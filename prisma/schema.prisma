@@ -99,13 +99,29 @@ model PartyHouseBooking {
 
 // ─── Restaurant ───────────────────────────────────────────────────────
 
+// Configurable physical tables. Restaurant staff edits this catalog
+// (count, seats, position on floor plan) from /restaurant-app/layout.
+// Position is in a fixed 1000×600 SVG coordinate system; the floor-plan
+// component scales to whatever container it lives in.
+model RestaurantTable {
+  id        String   @id @default(cuid())
+  number    Int      @unique     // staff-facing label, also used in old reservations
+  seats     Int      @default(4) // 1..12
+  x         Int      @default(500)
+  y         Int      @default(300)
+  shape     String   @default("ROUND") // ROUND | SQUARE
+  active    Boolean  @default(true)    // soft-delete: keeps old reservations valid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model RestaurantReservation {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   date        DateTime                  // full datetime of reservation
-  tableNumber Int      @default(1)      // 1..10 — the physical table
-  partySize   Int                       // 1..4 (4 seats per table)
+  tableNumber Int      @default(1)      // FK-by-value to RestaurantTable.number
+  partySize   Int                       // 1..table.seats
   notes       String?
   checkedIn   Boolean  @default(false)
   status      String   @default("CONFIRMED")  // CONFIRMED, CANCELLED, NO_SHOW
@@ -229,6 +245,12 @@ model MaintenanceTicket {
   description String
   status     String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
   priority   String   @default("NORMAL") // LOW, NORMAL, HIGH
+  // Optional fee — when admin/staff invoices the resident for the work.
+  // Minor units (kuruş for TRY). null = free / not invoiced yet.
+  feeAmount   Int?
+  feeCurrency String?  @default("TRY")
+  paid        Boolean  @default(false)
+  paidAt      DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   resolvedAt DateTime?

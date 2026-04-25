@@ -2,12 +2,14 @@ import { prisma } from "@/lib/db";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addDays, parseDateKey, startOfDay } from "@/lib/utils";
 import { ReservationActions } from "./reservation-actions";
+import { TIME_SLOTS } from "@/lib/restaurant-config";
+import { StaffSlotFloor } from "./staff-slot-floor";
 
 // Next.js 14: searchParams is a plain object, not a Promise.
 export default async function RestaurantHome({
   searchParams,
 }: {
-  searchParams: { d?: string };
+  searchParams: { d?: string; slot?: string };
 }) {
   const t = await getTranslations("RestaurantApp");
   const locale = await getLocale();
@@ -21,14 +23,20 @@ export default async function RestaurantHome({
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
 
-  const reservations = await prisma.restaurantReservation.findMany({
-    where: {
-      date: { gte: dayStart, lt: dayEnd },
-      status: { not: "CANCELLED" },
-    },
-    include: { user: { include: { villa: true } } },
-    orderBy: { date: "asc" },
-  });
+  const [reservations, tables] = await Promise.all([
+    prisma.restaurantReservation.findMany({
+      where: {
+        date: { gte: dayStart, lt: dayEnd },
+        status: { not: "CANCELLED" },
+      },
+      include: { user: { include: { villa: true } } },
+      orderBy: { date: "asc" },
+    }),
+    prisma.restaurantTable.findMany({
+      where: { active: true },
+      orderBy: { number: "asc" },
+    }),
+  ]);
 
   const fmtTime = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" });
   const fmtDay = new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" });
@@ -36,6 +44,24 @@ export default async function RestaurantHome({
 
   const totalGuests = reservations.reduce((sum, r) => sum + r.partySize, 0);
   const tablesInUse = new Set(reservations.map((r) => r.tableNumber)).size;
+  const totalTables = tables.length;
+  const totalSeats = tables.reduce((s, t) => s + t.seats, 0);
+
+  // Per-slot reservation map for the floor visualizer.
+  const reservationsBySlot = new Map<
+    string,
+    { tableNumber: number; userName: string; partySize: number }[]
+  >();
+  for (const r of reservations) {
+    const iso = r.date.toISOString();
+    const arr = reservationsBySlot.get(iso) ?? [];
+    arr.push({
+      tableNumber: r.tableNumber,
+      userName: r.user.name,
+      partySize: r.partySize,
+    });
+    reservationsBySlot.set(iso, arr);
+  }
 
   return (
     <div className="space-y-6">
@@ -71,10 +97,31 @@ export default async function RestaurantHome({
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         <StatCard label={locale === "tr" ? "Rezervasyon" : "Reservations"} value={reservations.length} />
-        <StatCard label={locale === "tr" ? "Masa" : "Tables"} value={`${tablesInUse}/10`} />
-        <StatCard label={locale === "tr" ? "Kişi" : "Guests"} value={`${totalGuests}/40`} />
+        <StatCard label={locale === "tr" ? "Masa" : "Tables"} value={`${tablesInUse}/${totalTables}`} />
+        <StatCard label={locale === "tr" ? "Kişi" : "Guests"} value={`${totalGuests}/${totalSeats}`} />
         <StatCard label={locale === "tr" ? "Gelen" : "Arrived"} value={reservations.filter((r) => r.checkedIn).length} />
       </div>
+
+      {/* Live floor plan with per-slot tabs */}
+      {tables.length > 0 && (
+        <StaffSlotFloor
+          tables={tables.map((t) => ({
+            id: t.id,
+            number: t.number,
+            seats: t.seats,
+            x: t.x,
+            y: t.y,
+            shape: t.shape as "ROUND" | "SQUARE",
+          }))}
+          slots={TIME_SLOTS.map((tm) => {
+            const d = new Date(dayStart);
+            d.setHours(tm.hour, tm.minute, 0, 0);
+            const iso = d.toISOString();
+            const arr = reservationsBySlot.get(iso) ?? [];
+            return { iso, label: tm.label, holders: arr };
+          })}
+        />
+      )}
 
       {/* Reservations list */}
       {reservations.length === 0 ? (

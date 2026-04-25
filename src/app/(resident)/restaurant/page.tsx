@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addDays, startOfDay } from "@/lib/utils";
 import { RestaurantForm } from "./restaurant-form";
-import { TOTAL_SEATS } from "@/lib/restaurant-config";
 
 export default async function RestaurantPage() {
   const session = await auth();
@@ -14,9 +13,13 @@ export default async function RestaurantPage() {
   const today = startOfDay(new Date());
   const windowEnd = addDays(today, 14); // 2-week booking window
 
-  // Fetch everything in parallel: this user's own history + all confirmed
-  // reservations in the next 2 weeks (for slot-availability rendering).
-  const [mine, confirmed] = await Promise.all([
+  // Fetch tables, this user's own history, and all confirmed reservations
+  // in the booking window (used for slot+table availability).
+  const [tables, mine, confirmed] = await Promise.all([
+    prisma.restaurantTable.findMany({
+      where: { active: true },
+      orderBy: { number: "asc" },
+    }),
     prisma.restaurantReservation.findMany({
       where: { userId: session.user.id },
       orderBy: { date: "desc" },
@@ -27,19 +30,18 @@ export default async function RestaurantPage() {
         date: { gte: today, lt: windowEnd },
         status: { not: "CANCELLED" },
       },
-      select: { date: true, partySize: true },
+      select: { date: true, tableNumber: true, partySize: true, userId: true },
     }),
   ]);
 
-  // Aggregate to "how many SEATS booked at each exact datetime". The
-  // customer form uses this to disable slots that can't fit the current
-  // party size. We never leak the actual total capacity as a number.
-  const seatsMap = new Map<string, number>();
-  for (const r of confirmed) {
-    const iso = r.date.toISOString();
-    seatsMap.set(iso, (seatsMap.get(iso) ?? 0) + r.partySize);
-  }
-  const slotSeats = Array.from(seatsMap, ([iso, seats]) => ({ iso, seats }));
+  // Per (iso, tableNumber) — who holds it (own user vs other) so the form
+  // can color the floor plan correctly without leaking other-resident PII.
+  const slotTableHolder: { iso: string; tableNumber: number; mine: boolean }[] =
+    confirmed.map((r) => ({
+      iso: r.date.toISOString(),
+      tableNumber: r.tableNumber,
+      mine: r.userId === session.user.id,
+    }));
 
   const fmt = new Intl.DateTimeFormat(locale, {
     weekday: "short",
@@ -57,7 +59,17 @@ export default async function RestaurantPage() {
       </header>
 
       <div className="card-luxury p-5">
-        <RestaurantForm slotSeats={slotSeats} totalSeats={TOTAL_SEATS} />
+        <RestaurantForm
+          tables={tables.map((t) => ({
+            id: t.id,
+            number: t.number,
+            seats: t.seats,
+            x: t.x,
+            y: t.y,
+            shape: t.shape as "ROUND" | "SQUARE",
+          }))}
+          slotTableHolder={slotTableHolder}
+        />
       </div>
 
       {mine.length > 0 && (
@@ -76,7 +88,8 @@ export default async function RestaurantPage() {
                     {fmt.format(r.date)}
                   </div>
                   <div className="text-xs text-forest-500 mt-0.5">
-                    {r.partySize} {locale === "tr" ? "kişi" : "guests"}
+                    {t("tableShort")} {r.tableNumber} · {r.partySize}{" "}
+                    {locale === "tr" ? "kişi" : "guests"}
                     {r.notes ? ` · ${r.notes}` : ""}
                   </div>
                 </div>

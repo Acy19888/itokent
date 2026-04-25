@@ -32,6 +32,28 @@ async function main() {
     console.log("✅ Created 2 tennis courts");
   }
 
+  // 2b. Restaurant tables — initial 10 tables in two rows of 5.
+  // Coordinates are in 1000×600 SVG space; staff can rearrange later.
+  const tableCount = await prisma.restaurantTable.count();
+  if (tableCount === 0) {
+    const initialTables = [
+      // Row 1 (y=200)
+      { number: 1, seats: 4, x: 150, y: 200, shape: "ROUND" },
+      { number: 2, seats: 4, x: 320, y: 200, shape: "ROUND" },
+      { number: 3, seats: 4, x: 500, y: 200, shape: "ROUND" },
+      { number: 4, seats: 4, x: 680, y: 200, shape: "ROUND" },
+      { number: 5, seats: 6, x: 860, y: 200, shape: "SQUARE" },
+      // Row 2 (y=420)
+      { number: 6, seats: 2, x: 150, y: 420, shape: "ROUND" },
+      { number: 7, seats: 2, x: 320, y: 420, shape: "ROUND" },
+      { number: 8, seats: 4, x: 500, y: 420, shape: "ROUND" },
+      { number: 9, seats: 4, x: 680, y: 420, shape: "ROUND" },
+      { number: 10, seats: 6, x: 860, y: 420, shape: "SQUARE" },
+    ];
+    await prisma.restaurantTable.createMany({ data: initialTables });
+    console.log("✅ Created 10 restaurant tables");
+  }
+
   // 3. Demo users (Admin, Restaurant staff, a few residents)
   const villa1 = await prisma.villa.findUnique({ where: { number: 1 } });
   const villa42 = await prisma.villa.findUnique({ where: { number: 42 } });
