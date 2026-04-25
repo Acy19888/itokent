@@ -56,6 +56,7 @@ export default async function AdminDashboard() {
           label={t("stats.residents")}
           value={residentCount}
           accent="forest"
+          href="/admin/residents"
         />
         <StatCard
           icon={<CalendarCheck className="w-5 h-5" />}
@@ -63,18 +64,21 @@ export default async function AdminDashboard() {
           value={tennisToday + restaurantToday}
           hint={`${tennisToday} ${locale === "tr" ? "tenis" : "tennis"} · ${restaurantToday} ${locale === "tr" ? "restoran" : "rest"}`}
           accent="gold"
+          href="/admin/bookings"
         />
         <StatCard
           icon={<Wrench className="w-5 h-5" />}
           label={t("stats.openTickets")}
           value={openTickets}
           accent="red"
+          href="/admin/maintenance"
         />
         <StatCard
           icon={<Sparkles className="w-5 h-5" />}
           label={t("stats.upcomingEvents")}
           value={upcomingEvents}
           accent="gold"
+          href="/admin/events"
         />
       </div>
 
@@ -122,27 +126,39 @@ export default async function AdminDashboard() {
 }
 
 function StatCard({
-  icon, label, value, hint, accent,
+  icon, label, value, hint, accent, href,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
   hint?: string;
   accent: "forest" | "gold" | "red";
+  href?: string;
 }) {
   const accents = {
     forest: "bg-forest-50 text-forest-700",
     gold: "bg-gold-50 text-gold-700",
     red: "bg-red-50 text-red-700",
   };
-  return (
-    <div className="card-luxury p-5">
+  const body = (
+    <>
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accents[accent]} mb-3`}>
         {icon}
       </div>
       <div className="text-xs uppercase tracking-wider text-forest-400">{label}</div>
       <div className="font-display text-3xl text-forest-900 mt-1">{value}</div>
       {hint && <div className="text-xs text-forest-500 mt-1">{hint}</div>}
-    </div>
+    </>
   );
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="card-luxury p-5 block hover:border-gold-300 hover:shadow-edel transition"
+      >
+        {body}
+      </Link>
+    );
+  }
+  return <div className="card-luxury p-5">{body}</div>;
 }
