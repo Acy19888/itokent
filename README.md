@@ -1,66 +1,76 @@
-# Akdeniz Villaları — Villa Community Reservation System
+# İtokent Urla — Resident Portal
 
-Ein vollständiges Full-Stack-Reservierungs- und Verwaltungssystem für eine private Gated Community mit ca. 250 Villen in der Türkei. Next.js 14 (App Router) + TypeScript + Prisma + NextAuth + Tailwind. Mobil-optimiert, mehrsprachig (Türkisch + Englisch), luxury Design.
+Reservation- and management portal for the **İtokent Urla** gated community (≈250 villas, near İzmir). Built as a single Next.js 14 app with three role-aware front-ends, a Postgres database, email-verified self-registration, and a stubbed payment flow ready to swap for Iyzico.
 
 ---
 
-## Features im Überblick
+## Was das Portal kann
 
-### Drei Benutzerrollen
+### Drei Rollen, drei Ansichten
 
-| Rolle | Zugang | Zweck |
+| Rolle | Einstieg | Zweck |
 |---|---|---|
-| **RESIDENT** (Bewohner) | `/home` | Mobile App: Tennis / Restaurant / Parti-Evi buchen, Gäste anmelden, Events sehen, Bakım-Ticket öffnen |
-| **ADMIN** (Verwaltung) | `/admin` | Desktop- & Mobil-Konsole: Alle Buchungen, Parti-Evi-Freigaben, Events, Duyurular, Bakım, Gäste, Sakinler |
-| **RESTAURANT_STAFF** | `/restaurant-app` | Tablet-/Handy-Ansicht: Tagesansicht der Reservierungen, Check-In / No-Show |
+| **RESIDENT** (Sakin) | `/home` | Mobile-first PWA — Tennis / Restoran / Parti Evi buchen, Gäste anmelden, Events sehen, Bakım-Tickets öffnen, Profil pflegen |
+| **ADMIN** | `/admin` | Desktop + Mobil — KPIs, alle Buchungen, Parti-Evi-Freigaben, Events, Duyurular, Bakım, Gäste, Sakinler-CRUD |
+| **RESTAURANT_STAFF** | `/restaurant-app` | Tablet-Ansicht für den Service — Tagesliste mit Check-In / No-Show |
 
-### Fachliche Features
+Auth-Routing (`src/middleware.ts`) leitet jede Rolle nach Login automatisch auf den richtigen Bereich um.
 
-- **Tennis** — 2 Plätze, 9:00–20:00, 1-Stunden-Slots, eine Buchung pro Slot via DB-Unique-Constraint. Vergangene Slots werden automatisch geblockt.
-- **Parti Evi** — max. 1 Event pro Tag, Anfrage → Admin-Freigabe (PENDING → APPROVED / REJECTED).
-- **Restaurant** — 30-Minuten-Slots 18:00–22:00, Check-In / No-Show durch Restaurant-Personal.
-- **Events** — Admin legt zweisprachig an, Bewohner sehen sie auf Home & Events-Seite.
-- **Gäste** — Bewohner meldet Gäste an, Admin/Security checkt am Tor ein.
-- **Duyurular** (News) — Admin postet zweisprachig mit Priorität (NORMAL/HIGH/URGENT).
-- **Bakım** (Maintenance) — Ticket-System mit Kategorien (Elektrik/Tesisat/Bahçe/Havuz/Diğer) und Status-Workflow (OPEN → IN_PROGRESS → RESOLVED).
+### Features
+
+- **Self-Service-Registrierung** mit 6-stelligem Email-Code (Resend, 15-Min-TTL, max. 6 Versuche).
+- **Tennis** — 2 Plätze, 9–20 Uhr, 1-Stunden-Slots, Unique-Constraint gegen Doppelbuchung; Bestätigungs- und Cancel-Mails.
+- **Parti Evi** — max. 1 Event/Tag, Anfrage → Admin-Freigabe (mit optionaler Gebühr) → Zahlung.
+- **Restoran** — 10 Tische, 18–22:30, 30-Min-Slots, gemeinsames Kapazitätslimit über alle Tische, Restaurant-Personal checkt vor Ort ein.
+- **Events** — zweisprachige Pflege durch den Admin, RSVP mit optionaler Gebühr, automatische Newsletter an alle Bewohner bei neuem Event/Duyuru.
+- **Bakım** — Ticket-Workflow OPEN → IN_PROGRESS → RESOLVED → CLOSED mit Kategorien Elektrik / Tesisat / Bahçe / Havuz / Diğer.
+- **Gäste** — Bewohner registriert, Security/Admin checkt am Tor ein.
+- **Profil** — eigener Edit + Passwortwechsel; Admin kann jeden Resident editieren, Villa neu zuweisen, Passwort zurücksetzen oder löschen.
+- **i18n** — Türkisch + Englisch, Cookie-basierter Wechsel (`src/lib/actions/locale.ts`).
+- **Zahlung** — Demo-Kartenformular (siehe „Zahlungs-Flow" weiter unten); produktiv durch Iyzico oder Stripe ersetzbar.
 
 ### Tech Stack
 
-- **Frontend**: Next.js 14 App Router, React 18, TypeScript, Tailwind CSS
-- **Backend**: Next.js Server Actions + Route Handler (alles im gleichen Repo)
-- **Datenbank**: Prisma ORM mit SQLite (Dev) — kann mit einer Zeile Änderung auf PostgreSQL für Produktion umgestellt werden
-- **Auth**: NextAuth v5 (Credentials Provider, bcrypt, JWT)
-- **i18n**: next-intl (Türkisch + Englisch, Cookie-basiert)
-- **Icons**: lucide-react
-- **Validation**: zod
-- **Fonts**: Playfair Display (serif/luxury), Cormorant Garamond (display), Inter (sans)
+- **Next.js 14.2 App Router** + React 18 + TypeScript
+- **Prisma 5.22** + Postgres (lokal: Neon dev branch, prod: Neon Frankfurt)
+- **NextAuth v5 beta** (Credentials, JWT, edge-fähig — `auth.config.ts`/`auth.ts` Split)
+- **next-intl 3.26** (TR/EN)
+- **Resend** REST API für transaktionale Mails (verification code, booking confirmations, RSVPs, newsletter)
+- **Tailwind CSS** + custom Luxury-Palette (Forest, Brass, Ivory, Cream)
+- **bcryptjs** für Passwort + 6-Code-Hashing
+- **zod** für End-to-end-Input-Validation auf jeder Server Action
 
 ---
 
-## Installation & erster Start
+## Installation auf einem neuen Rechner
 
-Voraussetzungen: **Node.js 20+** und **npm** (oder pnpm/yarn).
+Voraussetzungen: **Node.js 20+** und ein Postgres-Connection-String (am einfachsten ein kostenloser Neon-Branch — siehe `DEPLOY.md`).
 
 ```bash
-# 1. Abhängigkeiten installieren (generiert auch automatisch den Prisma Client)
-npm install
+# 1. Repo klonen + Abhängigkeiten
+git clone https://github.com/Acy19888/itokent.git
+cd itokent
+npm install            # postinstall ruft automatisch `prisma generate`
 
-# 2. .env Datei prüfen (ist bereits mit Dev-Defaults angelegt)
-cat .env
+# 2. .env anlegen
+cp .env.example .env
+# danach DATABASE_URL setzen (Neon-String) und AUTH_SECRET generieren:
+#   openssl rand -base64 32
 
-# 3. Datenbank-Schema pushen & Seed-Daten laden
+# 3. Schema auf die DB pushen + Seed-Daten
 npm run db:push
 npm run db:seed
 
-# 4. Dev-Server starten
-npm run dev
+# 4. Optional: Resend für echte Emails
+# RESEND_API_KEY in .env eintragen — sonst werden Mails nur geloggt.
+
+# 5. Dev-Server
+npm run dev            # → http://localhost:3000
 ```
 
-Öffne dann **http://localhost:3000**.
+### Demo-Logins (alle Passwort `demo1234`)
 
-### Demo-Logins (alle haben Passwort `demo1234`)
-
-| E-Mail | Rolle | Wohin |
+| E-Mail | Rolle | Landet auf |
 |---|---|---|
 | `admin@villa.com` | ADMIN | `/admin` |
 | `restaurant@villa.com` | RESTAURANT_STAFF | `/restaurant-app` |
@@ -68,19 +78,41 @@ npm run dev
 | `ayse@villa.com` | RESIDENT (Villa 042) | `/home` |
 | `can@villa.com` | RESIDENT (Villa 108) | `/home` |
 
+Vor dem ersten echten Rollout im Admin alle Demo-Konten löschen oder umbenennen.
+
 ---
 
-## Nützliche Befehle
+## Environment-Variablen
+
+`.env.example` ist die Quelle der Wahrheit; hier die Kurzfassung:
+
+| Variable | Pflicht | Beschreibung |
+|---|---|---|
+| `DATABASE_URL` | ja | Postgres-String mit `?sslmode=require` (Neon empfohlen) |
+| `AUTH_SECRET` | ja | ≥ 32 Zeichen, `openssl rand -base64 32` |
+| `AUTH_TRUST_HOST` | ja (prod) | Auf `true` hinter Reverse-Proxy / Vercel |
+| `RESEND_API_KEY` | optional | Wenn gesetzt, werden Mails wirklich versendet; sonst Console-Log |
+| `EMAIL_FROM` | optional | Bis Domain in Resend verifiziert ist, leer lassen — Fallback ist `İtokent Urla <onboarding@resend.dev>` |
+| `NEXT_PUBLIC_COMMUNITY_NAME` | – | Wird in Templates und Headern angezeigt |
+| `NEXT_PUBLIC_DEFAULT_LOCALE` | – | `tr` oder `en` (Default beim ersten Besuch) |
+
+---
+
+## Häufige Befehle
 
 ```bash
-npm run dev           # Dev-Server (Hot Reload)
-npm run build         # Produktions-Build
-npm run start         # Produktions-Server starten
-npm run db:push       # Schema → DB pushen (nach Schema-Änderung)
-npm run db:seed       # Seed-Daten einfügen
-npm run db:reset      # DB komplett resetten + neu seeden
-npm run db:studio     # Prisma Studio öffnen (DB-Browser auf Port 5555)
+npm run dev              # Hot-reload Dev-Server
+npm run build            # prisma generate + db push + next build (für Vercel)
+npm run start            # Produktions-Server (nach build)
+npm run db:push          # Schema → DB synchronisieren
+npm run db:seed          # 250 Villen + Demo-User + Beispiel-Events
+npm run db:reset         # ⚠ Wipe + Reseed
+npm run db:studio        # Prisma Studio (DB-Browser, Port 5555)
+npm run lint             # ESLint
+node scripts/migrate-live.js   # Idempotente additive Migration für Live-Neon
 ```
+
+`scripts/migrate-live.js` ist ein Sicherheitsnetz: er fährt nur `IF NOT EXISTS`-Statements und ist deshalb gefahrlos mehrfach ausführbar, falls `prisma db push` mal nicht durchgeht.
 
 ---
 
@@ -89,38 +121,48 @@ npm run db:studio     # Prisma Studio öffnen (DB-Browser auf Port 5555)
 ```
 villa-community/
 ├── prisma/
-│   ├── schema.prisma         # Datenbank-Schema (alle Modelle)
-│   └── seed.ts               # 250 Villen + Demo-User + Beispiel-Events
+│   ├── schema.prisma          # Modelle: User, Villa, TennisBooking, RestaurantReservation,
+│   │                          # PartyHouseBooking, Event, EventAttendee, Announcement,
+│   │                          # Guest, MaintenanceTicket, EmailVerification
+│   └── seed.ts
 ├── messages/
-│   ├── tr.json               # Türkische Übersetzungen
-│   └── en.json               # Englische Übersetzungen
-├── public/                   # Statische Assets, Manifest, Icons
+│   ├── tr.json                # Türkische Strings
+│   └── en.json                # Englische Strings
+├── scripts/
+│   └── migrate-live.js        # Additive idempotente DB-Migration
+├── public/                    # Manifest, Icons, statische Assets
 ├── src/
-│   ├── i18n/                 # next-intl Konfiguration
+│   ├── middleware.ts          # Edge-Auth-Guard, Rollen-Routing
+│   ├── i18n/                  # next-intl Setup
 │   ├── lib/
-│   │   ├── db.ts             # Prisma Client Singleton
-│   │   ├── auth.ts           # NextAuth + requireUser / requireRole Helfer
-│   │   ├── utils.ts          # Date-Helfer, cn() etc.
-│   │   └── actions/          # Server Actions, thematisch gruppiert
-│   │       ├── tennis.ts     # bookTennisSlot, cancelTennisBooking
-│   │       ├── party-house.ts
+│   │   ├── db.ts              # Prisma Singleton
+│   │   ├── auth.ts            # NextAuth + requireUser / requireRole
+│   │   ├── auth.config.ts     # Edge-kompatible Auth-Config (für middleware)
+│   │   ├── email.ts           # Resend-Wrapper + alle HTML-Templates
+│   │   └── actions/
+│   │       ├── register.ts    # startRegistration / confirmRegistration / resend
+│   │       ├── users.ts       # adminCreate/Update/Delete/ResetPassword + Profil
+│   │       ├── tennis.ts
 │   │       ├── restaurant.ts
+│   │       ├── party-house.ts
+│   │       ├── events.ts
 │   │       ├── guests.ts
 │   │       ├── maintenance.ts
-│   │       ├── admin.ts      # Admin-spezifische (approve/reject, create event/announcement)
+│   │       ├── admin.ts       # approve / reject / mark-paid Workflows
+│   │       ├── payments.ts    # Demo-Karte verifizieren + Booking als bezahlt markieren
 │   │       └── locale.ts
-│   ├── middleware.ts         # Auth-Guard + Rollen-Routing
 │   ├── components/
 │   │   ├── locale-switcher.tsx
 │   │   ├── resident/shell.tsx
 │   │   ├── admin/shell.tsx
 │   │   └── restaurant-app/shell.tsx
 │   └── app/
-│       ├── layout.tsx        # Root layout + Session / Intl Provider
-│       ├── login/            # Login-Seite (dark, luxury)
-│       ├── (resident)/       # Mobile Bewohner-App (gruppiertes Routing)
-│       │   ├── home/
-│       │   ├── tennis/       # ← Slot-Grid mit Verfügbarkeit
+│       ├── layout.tsx         # SessionProvider + IntlProvider
+│       ├── login/             # Dunkles Luxury-Theme
+│       ├── register/          # 2-Stage Flow (Form → Code-Eingabe)
+│       ├── (resident)/        # Mobile Bewohner-App
+│       │   ├── home/          # Dashboard, nächste Buchungen, News
+│       │   ├── tennis/        # Slot-Grid mit Verfügbarkeit
 │       │   ├── party-house/
 │       │   ├── restaurant/
 │       │   ├── events/
@@ -128,81 +170,104 @@ villa-community/
 │       │   ├── announcements/
 │       │   ├── maintenance/
 │       │   └── profile/
-│       ├── admin/            # Admin-Konsole (Desktop-Sidebar + Mobile-Drawer)
-│       │   ├── page.tsx      # Dashboard mit KPIs
+│       ├── admin/
+│       │   ├── page.tsx       # KPI-Dashboard
 │       │   ├── bookings/
 │       │   ├── events/
 │       │   ├── announcements/
 │       │   ├── maintenance/
 │       │   ├── guests/
-│       │   └── residents/
-│       └── restaurant-app/   # Restaurant-Ansicht (dunkles Theme)
-│           └── page.tsx      # Tagesliste mit Check-In
-└── README.md
+│       │   └── residents/     # CRUD: add / edit (mit Villa) / reset / delete
+│       └── restaurant-app/
+│           └── page.tsx
+└── DEPLOY.md                  # Schritt-für-Schritt Vercel + Neon
 ```
+
+---
+
+## Wichtige Flows
+
+### Registrierung (Sakin meldet sich selbst an)
+
+1. `/register` Formular: Vor-/Nachname, E-Mail, Telefon, Villa-Nr (1–250), Passwort + Bestätigung.
+2. `startRegistration` (Server Action) prüft Email-Eindeutigkeit + Villa-Existenz, schreibt eine Zeile in `EmailVerification` (bcrypt-hashed Code, 15 Min TTL) und sendet die Mail über Resend.
+3. Stage `verify`: 6-stelliger Code-Input. Falsche Codes erhöhen `attempts`; nach 6 Versuchen ist die Zeile blockiert und der Nutzer muss „Resend" drücken.
+4. `confirmRegistration` legt den User in einer Transaktion an und löscht die Verification-Zeile.
+5. Auto-Redirect auf `/login`.
+
+`EmailVerification` wird absichtlich **nicht** als Spalte am User-Modell gehalten — unverifizierte Accounts existieren erst gar nicht als `User`-Zeilen, also können sie sich auch nicht versehentlich einloggen.
+
+### Admin Resident-CRUD
+
+In `/admin/residents`:
+
+- **Add** (`UserPlus`-Button): öffnet ein Portal-Modal, ruft `adminCreateUser` mit Pflicht-Passwort. Kein Email-Code — der Admin ist Trust-Anchor.
+- **Edit** (`Pencil`): Name, Mail, Telefon **und Villa-Nr** ändern. Leeres Villa-Feld = abkoppeln.
+- **Reset Password** (`KeyRound`): neues Passwort setzen.
+- **Delete** (`Trash2`, rote Bestätigung): `adminDeleteUser` löscht alle eigenen Buchungen / Tickets / Gäste in einer Transaktion und reassigniert verfasste Events/Duyurular auf den löschenden Admin, damit Foreign-Keys gültig bleiben. Sich selbst löschen ist explizit blockiert.
+
+### Zahlungs-Flow (Demo)
+
+`src/lib/actions/payments.ts` hat ein bewusst minimales Karten-Validation-Stub (Luhn + Ablaufdatum) und markiert Buchung/RSVP als `paid`. Beim Echtbetrieb gegen Iyzico oder Stripe austauschen — die Stelle ist klein und gut isoliert.
+
+### E-Mail-Templates
+
+Alle Templates leben in `src/lib/email.ts` und teilen sich eine HTML-Shell (`wrapShell` + `shellHeader`). Resend-Schlüssel optional — ohne Key fällt der Wrapper auf einen Console-Log zurück, sodass lokales Entwickeln ohne API-Limits weiterläuft.
 
 ---
 
 ## Design-System
 
-**Luxury-Palette:**
-- `forest` — Tiefes Waldgrün (Primärfarbe, Hintergründe, Header)
-- `gold` — Antiques Gold (Akzente, CTAs, Hero-Elemente)
-- `cream` — Warmes Off-White (Text auf dunkelgrünem Hintergrund)
+**Palette** (`tailwind.config.ts`):
+- `forest` — tiefes Waldgrün (Primärflächen, Headers)
+- `brass` / `gold` — Antik-Gold-Akzente, CTAs
+- `ivory` / `cream` — warme helle Töne (Body, Cards)
+- `ink` — fast schwarz (Login, Restaurant-App-Theme)
 
-**Typografie:**
-- `font-display` → Cormorant Garamond für große Überschriften
-- `font-serif` → Playfair Display
-- `font-sans` → Inter (Body, UI-Text)
+**Schriften:** Cormorant Garamond (display), Playfair Display (serif), Inter (sans).
 
-**Komponenten-Klassen** (in `globals.css`): `.btn-gold`, `.btn-outline-gold`, `.card-luxury`, `.card-dark`, `.input-luxury`, `.slot-available`, `.slot-mine`, `.slot-booked`, `.badge-*`.
+**Klassen** (in `src/app/globals.css`): `.btn-primary`, `.btn-outline`, `.card-luxury`, `.input-luxury`, `.input-dark`, `.label-luxury`, `.label-dark`, `.bg-gradient-itokent`, `.bg-gradient-brass`, `.shadow-edel`, `.shadow-edel-lg`, `.animate-fade-up`.
 
----
-
-## Umstellung auf Produktion
-
-### 1. PostgreSQL statt SQLite
-In `prisma/schema.prisma`:
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
-Dann `DATABASE_URL` in `.env` auf einen Postgres-Connection-String setzen und `npx prisma migrate deploy` laufen lassen.
-
-### 2. Secrets rotieren
-```bash
-AUTH_SECRET=$(openssl rand -base64 32)
-```
-In deine Deployment-ENV (Vercel, Railway, Fly.io, eigener Server).
-
-### 3. Hosting-Vorschläge
-
-- **Vercel** — einfachster Weg, Free Tier reicht für den Anfang. DB: Neon (Postgres) oder Vercel Postgres.
-- **Railway** — Next.js + Postgres in einem Projekt, Pay-as-you-go.
-- **Eigener VPS (DigitalOcean / Hetzner)** — Docker Compose mit Next.js + Postgres + Nginx, ideal für ein türkisches Deployment mit DSGVO/Datenschutz-Hoheit.
-
-### 4. Offene Punkte für einen echten Rollout
-
-Dies ist ein **produktionsreifer MVP** — folgende Punkte würde ich vor Go-Live noch ergänzen:
-
-1. **Registrierung / Onboarding** — aktuell werden User nur über das Seed-Skript oder Admin manuell angelegt. Idealerweise bekommt jede Villa einen Einladungslink.
-2. **Passwort-Reset per E-Mail** — Resend / SendGrid / Postmark anbinden.
-3. **Push-Benachrichtigungen** (PWA) — wenn eine Buchung bestätigt / ein Event angekündigt wird.
-4. **SMS/WhatsApp-Integration** — besonders relevant in der Türkei für Gäste-Anmeldung am Tor.
-5. **Foto-Upload** für Events, Ankündigungen und Bakım-Tickets (S3 / Cloudflare R2).
-6. **Audit-Log** — wer hat wann was gebucht/storniert.
-7. **Rate-Limiting** auf Server Actions (z.B. Upstash Redis), besonders für Tennis-Buchung.
-8. **Offline-Support** (Service Worker) — die Shell läuft schon mit Manifest, aber keine Caching-Strategie.
+Modals werden konsistent über `createPortal(..., document.body)` mit SSR-Mounted-Guard gerendert (siehe `create-resident-button.tsx`, `resident-row.tsx`, `rsvp-button.tsx`).
 
 ---
 
-## Credits & Design-Entscheidungen
+## Deployment
 
-- **Warum Monorepo (3 Apps in einem Next.js-Projekt)?** Shared DB, shared Auth, shared i18n → weniger Komplexität für eine Community dieser Größe. Bei Skalierung kann man einzelne Bereiche als separate Apps herausziehen.
-- **Warum Server Actions statt REST?** Direktere Typsicherheit von DB → UI ohne manuelles API-Layer.
-- **Warum SQLite im Dev?** Null Installations-Reibung — einfach `npm run dev` und es läuft. In Produktion reicht eine Provider-Änderung für Postgres.
-- **Warum dunkles Theme für Login & Restaurant, helles für Bewohner & Admin?** Der Login setzt den Luxury-Ton, der Restaurant-Screen wird in einer dunklen Umgebung (Abendservice) genutzt, Bewohner-App ist tagsüber mobil im Sonnenlicht → helle Hintergrundoberfläche.
+Für die Schritt-für-Schritt-Anleitung zu GitHub + Vercel + Neon siehe **`DEPLOY.md`**. Kurzversion:
 
-Viel Erfolg mit der Community-App! 🌴
+1. `git push` auf `main` → Vercel deployt automatisch.
+2. `DATABASE_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `RESEND_API_KEY`, `EMAIL_FROM` in Vercel-Env-Vars setzen.
+3. Bei Schema-Änderungen entweder lokal `DATABASE_URL=… npx prisma db push` oder `node scripts/migrate-live.js`.
+
+---
+
+## Designentscheidungen (warum das so ist, wie es ist)
+
+- **Single-Repo, drei Front-Ends** — geteilte DB, geteiltes Auth, geteiltes i18n. Bei späterem Skalierungsbedarf lassen sich `restaurant-app` oder `admin` als eigene Apps abspalten.
+- **Server Actions statt REST** — Typensicherheit von Prisma bis zur UI, kein API-Layer zu pflegen.
+- **Email-Code statt Magic-Link** — Code per Mail funktioniert auch, wenn jemand den Browser-Tab schließt; und bei einer 250-Haushalt-Community sind Magic-Links ohnehin overkill.
+- **bcrypt für Verification-Codes** — Brute-Force-Schutz, auch wenn die `attempts`-Zählung der primäre Schutz ist (nach 6 Tries gesperrt).
+- **EmailVerification als eigene Tabelle, nicht Flag am User** — unverifizierte Accounts existieren nicht; saubere Trennung von „in Bearbeitung" und „aktiver Bewohner".
+- **Demo-Payment-Stub** — vor Go-Live durch Iyzico (Türkei-First) oder Stripe ersetzen. Iyzico unterstützt 3-D Secure, lokale Karten und TRY-Settlement.
+- **Resend** — günstigster Sender mit europäischer Region und einer API, die in 30 Zeilen eingebunden ist.
+
+---
+
+## Offene Punkte vor einem echten Rollout
+
+1. **Demo-User entfernen** und reale Admin-Accounts anlegen.
+2. **Custom-Domain in Resend verifizieren** (z. B. `noreply@itokent.tr`) — sonst landet Mail im Spam.
+3. **`EMAIL_FROM` und `NEXT_PUBLIC_COMMUNITY_NAME`** auf Live-Werte stellen.
+4. **Iyzico-Integration** statt Demo-Karte (Sandbox-Account → Live-Keys → 3-D Secure aktivieren).
+5. **Push-Benachrichtigungen** (PWA / Web Push) für Bestätigungen und Genehmigungen.
+6. **Audit-Log** für Admin-Aktionen (Wer hat wann welche Buchung genehmigt?).
+7. **Foto-Uploads** für Bakım-Tickets (Cloudflare R2 oder S3).
+8. **Rate-Limiting** auf Hot-Path Server Actions (Tennis/Restoran), z. B. Upstash Redis.
+9. **DSGVO** — Datenschutzhinweis, Auftragsverarbeitung mit Vercel + Neon + Resend dokumentieren.
+
+---
+
+## Lizenz / Eigentümerschaft
+
+Privates Projekt für die İtokent-Urla-Gemeinschaft. Kein öffentliches OSS-Projekt — Repo bleibt privat, Forks nur nach Absprache.

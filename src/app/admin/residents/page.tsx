@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ResidentRow } from "./resident-row";
+import { CreateResidentButton } from "./create-resident-button";
 
 export default async function AdminResidents() {
   const t = await getTranslations("Admin");
@@ -37,12 +38,15 @@ export default async function AdminResidents() {
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-3xl text-forest-900">
-          {t("tabs.residents")}
-        </h1>
-        <span className="text-sm text-forest-500">
-          {residents.length} {locale === "tr" ? "sakin" : "residents"}
-        </span>
+        <div className="flex items-center gap-4 flex-wrap">
+          <h1 className="font-display text-3xl text-forest-900">
+            {t("tabs.residents")}
+          </h1>
+          <span className="text-sm text-forest-500">
+            {residents.length} {locale === "tr" ? "sakin" : "residents"}
+          </span>
+        </div>
+        <CreateResidentButton />
       </header>
 
       <div className="card-luxury overflow-hidden">

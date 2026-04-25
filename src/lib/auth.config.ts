@@ -60,8 +60,8 @@ export const authConfig = {
       // Always allow the auth API
       if (pathname.startsWith("/api/auth")) return true;
 
-      // Public: /login
-      if (pathname === "/login") {
+      // Public: /login + /register (both steps live at /register)
+      if (pathname === "/login" || pathname.startsWith("/register")) {
         if (isLoggedIn) {
           const role = auth!.user.role;
           const to = role === "ADMIN" ? "/admin" : role === "RESTAURANT_STAFF" ? "/restaurant-app" : "/home";

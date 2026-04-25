@@ -535,3 +535,55 @@ export function broadcastEmail(params: {
     <p style="color:#4a4a4a;font-size:14px;line-height:1.6;margin:0;"><strong style="color:#153020;">İtokent Urla</strong></p>`;
   return { subject, html: wrapShell(bodyInner, L.footer, subject, tr) };
 }
+
+// ─── Email verification (registration) ───────────────────────────────────
+// 6-digit one-time code sent to the prospective resident's email before
+// we create their User row. The code is the trust anchor — without it
+// anyone could register against someone else's email.
+export function emailVerificationEmail(params: {
+  locale: Locale;
+  firstName: string;
+  code: string;           // 6-digit numeric, cleartext — ONLY sent via email
+  expiresInMin: number;   // e.g. 15
+}): { subject: string; html: string } {
+  const tr = params.locale !== "en";
+  const subject = tr
+    ? `İtokent Urla · Doğrulama kodunuz: ${params.code}`
+    : `İtokent Urla · Your verification code: ${params.code}`;
+  const L = tr
+    ? {
+        heading: "E-posta Doğrulama",
+        greeting: (n: string) => `Merhaba ${n},`,
+        intro:
+          "İtokent Urla sakin portalına kayıt talebiniz için aşağıdaki 6 haneli doğrulama kodunu kullanın:",
+        expires: (m: number) =>
+          `Bu kod ${m} dakika içinde geçerliliğini yitirir.`,
+        disclaimer:
+          "Eğer bu talebi siz oluşturmadıysanız bu e-postayı göz ardı edebilirsiniz.",
+        footer: "İtokent Urla · Sakin Portalı",
+      }
+    : {
+        heading: "Verify Your Email",
+        greeting: (n: string) => `Hello ${n},`,
+        intro:
+          "Use the 6-digit code below to finish creating your İtokent Urla resident account:",
+        expires: (m: number) => `This code expires in ${m} minutes.`,
+        disclaimer:
+          "If you didn't request this, you can safely ignore this email.",
+        footer: "İtokent Urla · Resident Portal",
+      };
+
+  const bodyInner = `
+    <h1 style="color:#153020;font-size:24px;margin:0 0 20px;font-weight:normal;font-family:'Cormorant Garamond',Georgia,serif;">${L.heading}</h1>
+    <p style="color:#4a4a4a;font-size:15px;line-height:1.6;margin:0 0 14px;">${L.greeting(escapeHtml(params.firstName))}</p>
+    <p style="color:#4a4a4a;font-size:15px;line-height:1.6;margin:0 0 24px;">${L.intro}</p>
+
+    <div style="background:#f8f4ea;border:2px solid #c29a44;border-radius:12px;padding:22px 20px;margin:0 0 18px;text-align:center;">
+      <div style="color:#7a6843;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:8px;">Kod</div>
+      <div style="color:#153020;font-size:38px;letter-spacing:12px;font-weight:700;font-family:'Courier New',monospace;">${escapeHtml(params.code)}</div>
+    </div>
+
+    <p style="color:#7a7a7a;font-size:13px;line-height:1.6;margin:0 0 22px;text-align:center;">${L.expires(params.expiresInMin)}</p>
+    <p style="color:#a0a0a0;font-size:12px;line-height:1.6;margin:24px 0 0;border-top:1px solid #efe9d8;padding-top:18px;">${L.disclaimer}</p>`;
+  return { subject, html: wrapShell(bodyInner, L.footer, subject, tr) };
+}

@@ -57,6 +57,25 @@ const statements = [
          ON DELETE CASCADE ON UPDATE CASCADE;
      END IF;
    END $$`,
+
+  // EmailVerification (staged registration — user rows are created only
+  // after the 6-digit code is confirmed).
+  `CREATE TABLE IF NOT EXISTS "EmailVerification" (
+     "id" TEXT NOT NULL,
+     "email" TEXT NOT NULL,
+     "code" TEXT NOT NULL,
+     "firstName" TEXT NOT NULL,
+     "lastName" TEXT NOT NULL,
+     "phone" TEXT NOT NULL,
+     "villaNumber" INTEGER NOT NULL,
+     "passwordHash" TEXT NOT NULL,
+     "attempts" INTEGER NOT NULL DEFAULT 0,
+     "expiresAt" TIMESTAMP(3) NOT NULL,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT "EmailVerification_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE INDEX IF NOT EXISTS "EmailVerification_email_idx"
+     ON "EmailVerification"("email")`,
 ];
 
 (async () => {
@@ -83,6 +102,10 @@ const statements = [
       `SELECT to_regclass('public."EventAttendee"')::text AS exists`,
     );
     console.log("\nEventAttendee table:", tbl[0].exists);
+    const tbl2 = await prisma.$queryRawUnsafe(
+      `SELECT to_regclass('public."EmailVerification"')::text AS exists`,
+    );
+    console.log("EmailVerification table:", tbl2[0].exists);
     console.log("\n✓ Migration complete.");
   } finally {
     await prisma.$disconnect();

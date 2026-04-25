@@ -192,6 +192,32 @@ model Announcement {
   publishedAt DateTime @default(now())
 }
 
+// ─── Email verification (self-serve registration) ────────────────────
+// A row is created when someone starts registering. Until they confirm
+// the 6-digit code, we DON'T have a User row — only this staged record.
+// After `confirm`, we create the User + delete the row in the same
+// transaction. Unconfirmed rows expire and get garbage-collected
+// (`expiresAt` is enforced at the application layer when we look them
+// up — any row with expiresAt < now() is treated as missing).
+model EmailVerification {
+  id           String   @id @default(cuid())
+  email        String
+  code         String                     // 6-digit numeric, hashed with bcrypt
+  // Staged registration payload — NOT a user row yet. We store enough
+  // to re-create the user once the code is confirmed. Password is already
+  // hashed at this point (done server-side before insert).
+  firstName    String
+  lastName     String
+  phone        String
+  villaNumber  Int
+  passwordHash String
+  attempts     Int      @default(0)       // guard against brute-force code guessing
+  expiresAt    DateTime                    // now() + 15m
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+}
+
 // ─── Maintenance Tickets ──────────────────────────────────────────────
 
 model MaintenanceTicket {
