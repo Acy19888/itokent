@@ -52,6 +52,30 @@ export default async function AdminMaintenance() {
               </span>
             </div>
             <p className="text-sm text-forest-700 mb-3">{tk.description}</p>
+            {tk.feeAmount && tk.feeAmount > 0 && (
+              <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-gold-50 border border-gold-200 px-2.5 py-1 text-xs">
+                <span className="text-gold-800 uppercase tracking-wider text-[10px]">
+                  {m("calloutFee")}
+                </span>
+                <span className="font-semibold text-forest-900">
+                  {new Intl.NumberFormat(locale === "en" ? "en-GB" : "tr-TR", {
+                    style: "currency",
+                    currency: tk.feeCurrency ?? "TRY",
+                    minimumFractionDigits: 0,
+                  }).format(tk.feeAmount / 100)}
+                </span>
+                <span
+                  className={
+                    "px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider " +
+                    (tk.paid
+                      ? "bg-forest-100 text-forest-800"
+                      : "bg-amber-100 text-amber-900")
+                  }
+                >
+                  {tk.paid ? m("paidOn") : m("payAfterWork")}
+                </span>
+              </div>
+            )}
             {(tk.status === "OPEN" || tk.status === "IN_PROGRESS") && (
               <TicketActions id={tk.id} status={tk.status as "OPEN" | "IN_PROGRESS"} />
             )}

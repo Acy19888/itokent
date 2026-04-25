@@ -272,7 +272,18 @@
     "submit": "Submit request",
     "myTickets": "My tickets",
     "empty": "No open tickets.",
-    "submitted": "Your request has been saved; we'll get to it shortly."
+    "submitted": "Your request has been saved; we'll get to it shortly.",
+    "paidCategoryHint": "Paid category",
+    "feeNotice": "Estimated call-out fee: {amount}",
+    "feeNoticeBody": "This category requires an external contractor. You'll pay the fee from \"My payments\" once the work is finished.",
+    "feeAccept": "I accept the {amount} call-out fee.",
+    "calloutFee": "Call-out fee",
+    "paidOn": "paid",
+    "payAfterWork": "Pay after the visit",
+    "payNow": "Pay now",
+    "back": "Back",
+    "errFeeNotAccepted": "Please accept the fee to continue.",
+    "errSubmit": "We couldn't save your request. Please try again."
   },
   "Profile": {
     "title": "My profile",

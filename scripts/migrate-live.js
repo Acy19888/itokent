@@ -92,6 +92,12 @@ const statements = [
    )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "RestaurantTable_number_key"
      ON "RestaurantTable"("number")`,
+
+  // MaintenanceTicket fee + payment columns — covers Bakım optional costs.
+  `ALTER TABLE "MaintenanceTicket" ADD COLUMN IF NOT EXISTS "feeAmount" INTEGER`,
+  `ALTER TABLE "MaintenanceTicket" ADD COLUMN IF NOT EXISTS "feeCurrency" TEXT DEFAULT 'TRY'`,
+  `ALTER TABLE "MaintenanceTicket" ADD COLUMN IF NOT EXISTS "paid" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "MaintenanceTicket" ADD COLUMN IF NOT EXISTS "paidAt" TIMESTAMP(3)`,
 ];
 
 (async () => {
@@ -109,6 +115,7 @@ const statements = [
       SELECT table_name, column_name FROM information_schema.columns
        WHERE (table_name = 'Event' AND column_name IN ('feeAmount', 'feeCurrency'))
           OR (table_name = 'PartyHouseBooking' AND column_name IN ('feeAmount', 'feeCurrency', 'paid', 'paidAt'))
+          OR (table_name = 'MaintenanceTicket' AND column_name IN ('feeAmount', 'feeCurrency', 'paid', 'paidAt'))
        ORDER BY table_name, column_name
     `);
     console.log("\nVerified columns:");

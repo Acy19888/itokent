@@ -272,7 +272,18 @@
     "submit": "Talep Gönder",
     "myTickets": "Taleplerim",
     "empty": "Açık talebiniz yok.",
-    "submitted": "Talebiniz kaydedildi, en kısa sürede ilgileneceğiz."
+    "submitted": "Talebiniz kaydedildi, en kısa sürede ilgileneceğiz.",
+    "paidCategoryHint": "Ücretli kategori",
+    "feeNotice": "Tahmini çağrı ücreti: {amount}",
+    "feeNoticeBody": "Bu kategori dışarıdan bir ustayı gerektirir. Ücret, iş tamamlandıktan sonra «Ödemelerim» bölümünden ödenir.",
+    "feeAccept": "{amount} tutarındaki çağrı ücretini kabul ediyorum.",
+    "calloutFee": "Çağrı Ücreti",
+    "paidOn": "ödendi",
+    "payAfterWork": "İş bittikten sonra ödenir",
+    "payNow": "Şimdi öde",
+    "back": "Geri",
+    "errFeeNotAccepted": "Devam etmek için ücreti kabul etmelisiniz.",
+    "errSubmit": "Talep kaydedilemedi. Lütfen tekrar deneyin."
   },
   "Profile": {
     "title": "Profilim",

@@ -139,9 +139,50 @@ export async function payPartyFee(input: z.infer<typeof payPartySchema>) {
     });
     revalidatePath("/party-house");
     revalidatePath("/admin");
+    revalidatePath("/payments");
     return { ok: true as const };
   } catch (e: any) {
     console.error("[payments.payPartyFee]", e?.message);
+    return { ok: false as const, error: "UNKNOWN" as const };
+  }
+}
+
+// ─── Maintenance ticket call-out fee ─────────────────────────────────
+
+const payMaintenanceSchema = z.object({
+  ticketId: z.string().min(1),
+  card: cardSchema,
+});
+
+export async function payMaintenanceFee(input: z.infer<typeof payMaintenanceSchema>) {
+  try {
+    const user = await requireUser();
+    const parsed = payMaintenanceSchema.parse(input);
+
+    const status = await validateCardShape(parsed.card);
+    if (status !== "OK") return { ok: false as const, error: status };
+
+    const ticket = await prisma.maintenanceTicket.findUnique({
+      where: { id: parsed.ticketId },
+    });
+    if (!ticket || ticket.userId !== user.id) {
+      return { ok: false as const, error: "NOT_FOUND" as const };
+    }
+    if (!ticket.feeAmount || ticket.feeAmount <= 0) {
+      return { ok: false as const, error: "NO_FEE" as const };
+    }
+    if (ticket.paid) return { ok: true as const, alreadyPaid: true };
+
+    await prisma.maintenanceTicket.update({
+      where: { id: ticket.id },
+      data: { paid: true, paidAt: new Date() },
+    });
+    revalidatePath("/maintenance");
+    revalidatePath("/payments");
+    revalidatePath("/admin");
+    return { ok: true as const };
+  } catch (e: any) {
+    console.error("[payments.payMaintenanceFee]", e?.message);
     return { ok: false as const, error: "UNKNOWN" as const };
   }
 }
