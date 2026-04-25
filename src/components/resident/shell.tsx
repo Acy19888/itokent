@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import {
   Home, CalendarCheck, PartyPopper, UtensilsCrossed,
   Sparkles, UserPlus, Megaphone, Wrench, User, LogOut, Menu, X,
+  Receipt,
 } from "lucide-react";
 import { useState } from "react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -42,6 +43,7 @@ export function ResidentShell({ children, user }: Props) {
     { href: "/guests", label: t("guests"), icon: UserPlus },
     { href: "/announcements", label: t("announcements"), icon: Megaphone },
     { href: "/maintenance", label: t("maintenance"), icon: Wrench },
+    { href: "/payments", label: t("payments"), icon: Receipt },
     { href: "/profile", label: t("profile"), icon: User },
   ];
 
